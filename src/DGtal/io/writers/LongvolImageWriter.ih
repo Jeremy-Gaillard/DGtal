@@ -1,0 +1,99 @@
+/**
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Lesser General Public License as
+ *  published by the Free Software Foundation, either version 3 of the
+ *  License, or  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **/
+
+/**
+ * @file LongvolImageWriter.ih
+ * @author Jérémy Gaillard (\c jeremy.gaillard@insa-lyon.fr )
+ * Institut National des Sciences Appliquées - INSA, France
+ *
+ * @date 2011/06/11
+ *
+ * Implementation of inline methods defined in LongvolImageWriter.h
+ *
+ * This file is part of the DGtal library.
+ */
+
+
+//////////////////////////////////////////////////////////////////////////////
+#include <cstdlib>
+#include <fstream>
+#include "DGtal/io/Color.h"
+//////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+// IMPLEMENTATION of inline methods.
+///////////////////////////////////////////////////////////////////////////////
+
+
+namespace DGtal {
+  template<typename I>
+  bool
+  LongvolImageWriter<I>::exportLongvol(const std::string & filename, const I & aImage)
+					throw(DGtal::IOException)
+  {
+    DGtal::IOException dgtalio;
+  
+    ofstream out;
+    typename I::Domain::Vector ext = aImage.extent();
+    typename I::Domain domain = aImage.domain();
+    typename I::Value val;
+  
+    try
+      {
+	out.open(filename.c_str());
+
+	//Longvol format
+	out << "X: "<< ext[0]<<endl;
+	out << "Y: "<< ext[1]<<endl;
+	out << "Z: "<< ext[2]<<endl;
+	out << "Lvoxel-Size: 4"<<endl; //not used in liblongvol but required
+	out << "Alpha-Color: 0"<<endl;
+	out << "Lvoxel-Endian: 0"<<endl;//not used in liblongvol but required
+	out << "Int-Endian: 0123"<<endl;
+	out << "Version: 2"<<endl;
+	out << "."<<endl;
+      
+	out.close(); 
+    
+	out.open(filename.c_str(),ios_base::binary | ios_base::app);
+ 
+	DGtal::uint64_t longval;
+      
+	//We scan the domain instead of the image because we cannot
+	//trust the image container Iterator
+	for(typename I::Domain::ConstIterator it = domain.begin(), itend=domain.end();
+	    it!=itend;
+	    ++it)
+	  {
+	    val = aImage( (*it) );
+	    longval = (DGtal::uint64_t) val;
+    
+	    write_word(out,longval);
+	  }
+      
+	out.close();
+
+      }
+    catch( ... )
+      {
+	std::cout << "LongVol writer IO error on export " << filename << endl;
+	throw dgtalio;
+      }
+    
+    return true;
+  }
+
+}//namespace
