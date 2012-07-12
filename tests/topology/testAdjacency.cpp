@@ -185,6 +185,27 @@ bool testLocalGraphModel()
          << "Within, bestCapacity : " << Adj::bestCapacity()
          << "== 72 ?" << std::endl;
   trace.endBlock();
+  
+  int neighborCount = 0;
+  trace.beginBlock ( "Testing circulatorl" );
+  typedef Z2i::Point Point;
+  typedef Z2i::Adj4 Adj4;
+  Adj4::VertexCirculator circ = Adj4::begin(Point(10,10));
+  do
+  {
+    trace.info() << *(circ.base()) << std::endl;
+    if(*(circ.base()) == Point(9,10) ||
+      *(circ.base()) == Point(10,9) ||
+      *(circ.base()) == Point(10,11) ||
+      *(circ.base()) == Point(11,10) )
+      neighborCount++;
+    circ++;
+  }
+  while( circ.base() != circ.begin() );
+  nbok += neighborCount == 4 ? 1 : 0;
+  nb++;
+  trace.info() << "Found " << neighborCount << " out of 4 neighbors" << std::endl;
+  trace.endBlock();
 
   
   

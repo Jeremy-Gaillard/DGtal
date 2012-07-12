@@ -47,6 +47,8 @@
 #include "DGtal/kernel/CSpace.h"
 #include "DGtal/kernel/SpaceND.h"
 #include "DGtal/kernel/BasicPointPredicates.h"
+#include "DGtal/base/Circulator.h"
+#include "DGtal/base/ConstIteratorAdapter.h"
 //////////////////////////////////////////////////////////////////////////////
 
 namespace DGtal
@@ -74,6 +76,32 @@ namespace DGtal
    *
    * @see testAdjacency.cpp
    */
+  
+  template <typename TPoint>
+  class OffsetFunctor
+  {
+  public:
+    typedef TPoint Point;
+    typedef Point Value;
+    OffsetFunctor(Point & offset)
+    {
+      myOffset = offset;
+    }
+    
+    Point operator()(const Point & p) const
+    {
+      typename Point::Dimension dim = Point::dimension;
+      Point translatedPoint = Point();
+      for ( typename Point::Dimension d = 0; d != dim; ++d )
+      {
+	translatedPoint[d] = p[d] + myOffset[d];
+      }
+      return translatedPoint;
+    }
+  private:
+    Point myOffset;
+  };
+  
   template <typename TSpace, Dimension maxNorm1, 
       Dimension dimension = TSpace::dimension >
   class MetricAdjacency
@@ -96,6 +124,9 @@ namespace DGtal
     template <typename Value> struct VertexMap {
       typedef typename std::map<Vertex, Value> Type;
     };
+    typedef typename std::vector<Vertex> VertexVector;
+    typedef ConstIteratorAdapter< typename VertexVector::iterator, OffsetFunctor<Point> > OffsetIterator;
+    typedef Circulator< OffsetIterator > VertexCirculator;
 
     // ----------------------- Standard services ------------------------------
   public:
@@ -191,6 +222,18 @@ namespace DGtal
 		    const Vertex & v,
 		    const VertexPredicate & pred);
     
+   /**
+    * Provides a circulator which iterates over the neighbors of a vertex v.
+    * 
+    * 
+    * @param v the vertex whose neighbors will be visited
+    * 
+    * @return a circulator on the neighborhood
+    */
+    static
+    VertexCirculator
+    begin(Vertex v);
+    
     // ----------------------- Interface --------------------------------------
   public:
 
@@ -216,6 +259,7 @@ namespace DGtal
     // ------------------------- Hidden services ------------------------------
   protected:
     static Size computeCapacity();
+    static VertexVector computeNeighborhood();
 
   private:
 
@@ -236,6 +280,7 @@ namespace DGtal
 
     // ------------------------- Internals ------------------------------------
   private:
+    static VertexVector neighborTemplate;
 
   }; // end of class MetricAdjacency
 
