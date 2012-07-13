@@ -178,21 +178,21 @@ DGtal::MetricAdjacency<TSpace,maxNorm1,dimension>::writeNeighbors
 }
 
 /**
-  * Writes the neighbors of a vertex which satisfy a predicate using an 
-  * output iterator
-  * 
-  * 
-  * @tparam OutputObjectIterator the type of an output iterator writing
-  * in a container of vertices.
-  * 
-  * @tparam VertexPredicate the type of the predicate
-  * 
-  * @param it the output iterator
-  * 
-  * @param v the vertex whose neighbors will be written
-  * 
-  * @param pred the predicate that must be satisfied
-  */
+ * Writes the neighbors of a vertex which satisfy a predicate using an 
+ * output iterator
+ * 
+ * 
+ * @tparam OutputObjectIterator the type of an output iterator writing
+ * in a container of vertices.
+ * 
+ * @tparam VertexPredicate the type of the predicate
+ * 
+ * @param it the output iterator
+ * 
+ * @param v the vertex whose neighbors will be written
+ * 
+ * @param pred the predicate that must be satisfied
+ */
 template <typename TSpace, Dimension maxNorm1, Dimension dimension>
 template <typename OutputIterator, typename VertexPredicate>
 void
@@ -228,13 +228,47 @@ DGtal::MetricAdjacency<TSpace,maxNorm1,dimension>::writeNeighbors
  */
 template <typename TSpace, Dimension maxNorm1, Dimension dimension>
 typename DGtal::MetricAdjacency<TSpace,maxNorm1,dimension>::VertexCirculator
-DGtal::MetricAdjacency<TSpace,maxNorm1,dimension>::begin(Vertex v)
+DGtal::MetricAdjacency<TSpace,maxNorm1,dimension>::begin(const Vertex & v)
 {
   typename VertexVector::iterator itb = neighborTemplate.begin();
   typename VertexVector::iterator ite = neighborTemplate.end();
   OffsetIterator offitb(itb, OffsetFunctor<Point>(v));
   OffsetIterator offite(ite, OffsetFunctor<Point>(v));
   return VertexCirculator(offitb, offitb, offite);
+}
+
+/**
+ * Provides a circulator which iterates over the neighbors of a vertex v
+ * which satisfy a predicate.
+ * 
+ * 
+ * @tparam VertexPredicate the type of the predicate
+ * 
+ * 
+ * @param v the vertex whose neighbors will be visited
+ * 
+ * @param pred the predicate that must be satisfied
+ * 
+ * @return a circulator on the neighborhood
+ */
+template <typename TSpace, Dimension maxNorm1, Dimension dimension>
+template <typename VertexPredicate>
+typename DGtal::MetricAdjacency<TSpace,maxNorm1,dimension>::VertexCirculator
+DGtal::MetricAdjacency<TSpace,maxNorm1,dimension>::begin(const Vertex & v, const VertexPredicate & pred)
+{
+  VertexVector vect;
+  VertexCirculator circ = begin(v);
+  do
+  {
+    Vertex v = *(circ.base());
+    if( pred(v) )
+      vect.push_back(v);
+    circ++;
+  }
+  while( circ.base() != circ.begin() );
+  typename VertexVector::iterator itb = vect.begin();
+  typename VertexVector::iterator ite = vect.end();
+  return VertexCirculator(itb, itb, ite);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -441,7 +475,7 @@ namespace DGtal {
     inline
     static
     VertexCirculator
-    begin(Vertex v)
+    begin(const Vertex & v)
     {
       typename VertexVector::iterator itb = neighborTemplate.begin();
       typename VertexVector::iterator ite = neighborTemplate.end();
@@ -449,6 +483,28 @@ namespace DGtal {
       OffsetIterator offite(ite, OffsetFunctor<Point>(v));
       return VertexCirculator(offitb, offitb, offite);
     }
+    
+    template <typename VertexPredicate>
+    inline
+    static
+    VertexCirculator
+    begin(const Vertex & v, const VertexPredicate & pred)
+    {
+      VertexVector vect;
+      VertexCirculator circ = begin(v);
+      do
+      {
+	Vertex v = *(circ.base());
+	if( pred(v) )
+	  vect.push_back(v);
+	circ++;
+      }
+      while( circ.base() != circ.begin() );
+      typename VertexVector::iterator itb = vect.begin();
+      typename VertexVector::iterator ite = vect.end();
+      return VertexCirculator(itb, itb, ite);
+    }
+
     
     // ----------------------- Interface --------------------------------------
   public:
@@ -590,7 +646,7 @@ DGtal::MetricAdjacency<TSpace,2,2>::neighborTemplate = DGtal::MetricAdjacency<TS
     inline
     static
     VertexCirculator
-    begin(Vertex v)
+    begin(const Vertex & v)
     {
       typename VertexVector::iterator itb = neighborTemplate.begin();
       typename VertexVector::iterator ite = neighborTemplate.end();
@@ -598,6 +654,28 @@ DGtal::MetricAdjacency<TSpace,2,2>::neighborTemplate = DGtal::MetricAdjacency<TS
       OffsetIterator offite(ite, OffsetFunctor<Point>(v));
       return VertexCirculator(offitb, offitb, offite);
     }
+    
+    template <typename VertexPredicate>
+    inline
+    static
+    VertexCirculator
+    begin(const Vertex & v, const VertexPredicate & pred)
+    {
+      VertexVector vect;
+      VertexCirculator circ = begin(v);
+      do
+      {
+	Vertex v = *(circ.base());
+	if( pred(v) )
+	  vect.push_back(v);
+	circ++;
+      }
+      while( circ.base() != circ.begin() );
+      typename VertexVector::iterator itb = vect.begin();
+      typename VertexVector::iterator ite = vect.end();
+      return VertexCirculator(itb, itb, ite);
+    }
+
     
     // ----------------------- Interface --------------------------------------
   public:
@@ -799,7 +877,7 @@ DGtal::MetricAdjacency<TSpace,1,2>::neighborTemplate = DGtal::MetricAdjacency<TS
     inline
     static
     VertexCirculator
-    begin(Vertex v)
+    begin(const Vertex & v)
     {
       typename VertexVector::iterator itb = neighborTemplate.begin();
       typename VertexVector::iterator ite = neighborTemplate.end();
@@ -807,6 +885,28 @@ DGtal::MetricAdjacency<TSpace,1,2>::neighborTemplate = DGtal::MetricAdjacency<TS
       OffsetIterator offite(ite, OffsetFunctor<Point>(v));
       return VertexCirculator(offitb, offitb, offite);
     }
+    
+    template <typename VertexPredicate>
+    inline
+    static
+    VertexCirculator
+    begin(const Vertex & v, const VertexPredicate & pred)
+    {
+      VertexVector vect;
+      VertexCirculator circ = begin(v);
+      do
+      {
+	Vertex v = *(circ.base());
+	if( pred(v) )
+	  vect.push_back(v);
+	circ++;
+      }
+      while( circ.base() != circ.begin() );
+      typename VertexVector::iterator itb = vect.begin();
+      typename VertexVector::iterator ite = vect.end();
+      return VertexCirculator(itb, itb, ite);
+    }
+
     
     // ----------------------- Interface --------------------------------------
   public:
@@ -1010,7 +1110,7 @@ DGtal::MetricAdjacency<TSpace,3,3>::neighborTemplate = DGtal::MetricAdjacency<TS
     inline
     static
     VertexCirculator
-    begin(Vertex v)
+    begin(const Vertex & v)
     {
       typename VertexVector::iterator itb = neighborTemplate.begin();
       typename VertexVector::iterator ite = neighborTemplate.end();
@@ -1018,6 +1118,28 @@ DGtal::MetricAdjacency<TSpace,3,3>::neighborTemplate = DGtal::MetricAdjacency<TS
       OffsetIterator offite(ite, OffsetFunctor<Point>(v));
       return VertexCirculator(offitb, offitb, offite);
     }
+    
+    template <typename VertexPredicate>
+    inline
+    static
+    VertexCirculator
+    begin(const Vertex & v, const VertexPredicate & pred)
+    {
+      VertexVector vect;
+      VertexCirculator circ = begin(v);
+      do
+      {
+	Vertex v = *(circ.base());
+	if( pred(v) )
+	  vect.push_back(v);
+	circ++;
+      }
+      while( circ.base() != circ.begin() );
+      typename VertexVector::iterator itb = vect.begin();
+      typename VertexVector::iterator ite = vect.end();
+      return VertexCirculator(itb, itb, ite);
+    }
+
     
     // ----------------------- Interface --------------------------------------
   public:
@@ -1181,13 +1303,34 @@ DGtal::MetricAdjacency<TSpace,2,3>::neighborTemplate = DGtal::MetricAdjacency<TS
     inline
     static
     VertexCirculator
-    begin(Vertex v)
+    begin(const Vertex & v)
     {
       typename VertexVector::iterator itb = neighborTemplate.begin();
       typename VertexVector::iterator ite = neighborTemplate.end();
       OffsetIterator offitb(itb, OffsetFunctor<Point>(v));
       OffsetIterator offite(ite, OffsetFunctor<Point>(v));
       return VertexCirculator(offitb, offitb, offite);
+    }
+    
+    template <typename VertexPredicate>
+    inline
+    static
+    VertexCirculator
+    begin(const Vertex & v, const VertexPredicate & pred)
+    {
+      VertexVector vect;
+      VertexCirculator circ = begin(v);
+      do
+      {
+	Vertex v = *(circ.base());
+	if( pred(v) )
+	  vect.push_back(v);
+	circ++;
+      }
+      while( circ.base() != circ.begin() );
+      typename VertexVector::iterator itb = vect.begin();
+      typename VertexVector::iterator ite = vect.end();
+      return VertexCirculator(itb, itb, ite);
     }
 
     // ----------------------- Interface --------------------------------------

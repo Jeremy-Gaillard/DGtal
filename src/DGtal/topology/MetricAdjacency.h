@@ -49,6 +49,7 @@
 #include "DGtal/kernel/BasicPointPredicates.h"
 #include "DGtal/base/Circulator.h"
 #include "DGtal/base/ConstIteratorAdapter.h"
+#include "DGtal/kernel/BasicPointFunctors.h"
 //////////////////////////////////////////////////////////////////////////////
 
 namespace DGtal
@@ -76,31 +77,7 @@ namespace DGtal
    *
    * @see testAdjacency.cpp
    */
-  
-  template <typename TPoint>
-  class OffsetFunctor
-  {
-  public:
-    typedef TPoint Point;
-    typedef Point Value;
-    OffsetFunctor(Point & offset)
-    {
-      myOffset = offset;
-    }
-    
-    Point operator()(const Point & p) const
-    {
-      typename Point::Dimension dim = Point::dimension;
-      Point translatedPoint = Point();
-      for ( typename Point::Dimension d = 0; d != dim; ++d )
-      {
-	translatedPoint[d] = p[d] + myOffset[d];
-      }
-      return translatedPoint;
-    }
-  private:
-    Point myOffset;
-  };
+
   
   template <typename TSpace, Dimension maxNorm1, 
       Dimension dimension = TSpace::dimension >
@@ -232,7 +209,26 @@ namespace DGtal
     */
     static
     VertexCirculator
-    begin(Vertex v);
+    begin(const Vertex & v);
+    
+    /**
+    * Provides a circulator which iterates over the neighbors of a vertex v
+    * which satisfy a predicate.
+    * 
+    * 
+    * @tparam VertexPredicate the type of the predicate
+    * 
+    * 
+    * @param v the vertex whose neighbors will be visited
+    * 
+    * @param pred the predicate that must be satisfied
+    * 
+    * @return a circulator on the neighborhood
+    */
+    template <typename VertexPredicate>
+    static
+    VertexCirculator
+    begin(const Vertex & v, const VertexPredicate & pred);
     
     // ----------------------- Interface --------------------------------------
   public:

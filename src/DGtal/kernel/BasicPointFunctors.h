@@ -136,9 +136,63 @@ namespace DGtal
      Integer myDefaultInteger; 
 
   }; // end of class ConstantPointFunctors
+  
+  
+  
+  
+  
+  /////////////////////////////////////////////////////////////////////////////
+  // template class OffsetFunctor
+  
+  
+  /**
+   * Description of template class 'OffsetFunctor' <p>
+   * \brief Aim: Functor that translates a point by an offset
+   * defined by a vector
+   * 
+   * @tparam TPoint the type of the point
+   */
+  template <typename TPoint>
+  class OffsetFunctor
+  {
+  public:
+    typedef TPoint Point;
+    typedef Point Value;
+    /**
+     * Constructor
+     * 
+     * @param offset the vector by which you want the points
+     * translated
+     */
+    OffsetFunctor(const Point & offset)
+    {
+      myOffset = offset;
+    }
+    
+    /**
+     * Main operator
+     * @param p any point.
+     * @return the translated point.
+     */
+    Point operator()(const Point & p) const
+    {
+      typename Point::Dimension dim = Point::dimension;
+      Point translatedPoint = Point();
+      for ( typename Point::Dimension d = 0; d != dim; ++d )
+      {
+	translatedPoint[d] = p[d] + myOffset[d];
+      }
+      return translatedPoint;
+    }
+  private:
+    Point myOffset;
+  }; // end of class OffsetFunctor
 
 
 } // namespace DGtal
+
+
+
 
 
 ///////////////////////////////////////////////////////////////////////////////

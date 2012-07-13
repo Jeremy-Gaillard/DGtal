@@ -175,8 +175,7 @@ void
 DGtal::DomainAdjacency<TDomain, TAdjacency>::writeNeighbors
 ( OutputIterator &it, const Vertex & v ) const
 {
-  //myAdjacency.writeProperNeighborhood( v, it, myPred );//writeNeighbors<OutputIterator>( v, it );
-  myAdjacency.writeNeighbors( it, v );
+  myAdjacency.writeNeighbors( it, v, myPred );
 }
 
 /**
@@ -203,7 +202,6 @@ DGtal::DomainAdjacency<TDomain, TAdjacency>::writeNeighbors
 {
   vector<Vertex> vect;
   back_insert_iterator< vector<Vertex> > out_it(vect);
-  //myAdjacency.writeProperNeighborhood( vect, out_it, myPred );
   myAdjacency.writeNeighbors( out_it, v, myPred );
   for( typename vector<Vertex>::const_iterator cit = vect.begin(); cit != vect.end(); cit ++ )
   {
@@ -212,7 +210,57 @@ DGtal::DomainAdjacency<TDomain, TAdjacency>::writeNeighbors
       *it++ = *cit;
     }
   }
-  //myAdjacency.writeNeighbors<OutputIterator, VertexPredicate>( v, it, pred );
+}
+
+/**
+ * Provides a circulator which iterates over the neighbors of a vertex v.
+ * 
+ * 
+ * @param v the vertex whose neighbors will be visited
+ * 
+ * @return a circulator on the neighborhood
+ */
+template <typename TDomain, typename TAdjacency>
+typename DGtal::DomainAdjacency<TDomain, TAdjacency>::VertexCirculator
+DGtal::DomainAdjacency<TDomain, TAdjacency>::begin(const Vertex & v)
+{
+  return myAdjacency.begin(v, myPred);
+}
+
+/**
+ * Provides a circulator which iterates over the neighbors of a vertex v
+ * which satisfy a predicate.
+ * 
+ * 
+ * @tparam VertexPredicate the type of the predicate
+ * 
+ * 
+ * @param v the vertex whose neighbors will be visited
+ * 
+ * @param pred the predicate that must be satisfied
+ * 
+ * @return a circulator on the neighborhood
+ */
+template <typename TDomain, typename TAdjacency>
+template <typename VertexPredicate>
+typename DGtal::DomainAdjacency<TDomain, TAdjacency>::VertexCirculator
+DGtal::DomainAdjacency<TDomain, TAdjacency>::begin(const Vertex & v, const VertexPredicate & pred)
+{
+  VertexVector vect;
+  typename Adjacency::VertexCirculator circ = myAdjacency.begin(v, myPred);
+  if( circ.isValid() )
+  {
+    do
+    {
+      Vertex v = *(circ.base());
+      if( pred(v) )
+	vect.push_back(v);
+    }
+    while( circ.base() != circ.begin() );
+  }
+  typename VertexVector::iterator itb = vect.begin();
+  typename VertexVector::iterator ite = vect.end();
+  return VertexCirculator(itb, itb, ite);
 }
 
 //                                                                           //
