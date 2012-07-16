@@ -315,26 +315,28 @@ typename DGtal::Object<TDigitalTopology, TDigitalSet>::SmallObject
 DGtal::Object<TDigitalTopology, TDigitalSet>::neighborhood
 ( const Point & p ) const
 {
-  typedef std::vector<Point> Container;
-  typedef typename Container::const_iterator ContainerConstIterator;
   typedef typename DigitalSet::ConstIterator DigitalSetConstIterator;
-
-  // Intermediate container that is fast writable.
-  local_points.clear();
-  std::back_insert_iterator< Container > back_ins_it( local_points );
-  adjacency().writeNeighbors( back_ins_it, p );
-  local_points.push_back( p );
-
-  // A neighborhood is small, so is defined the digital object.
   SmallObject neighA( myTopo, pointSet().domain() );
-  const ContainerConstIterator it_end( local_points.end() );
-  const DigitalSetConstIterator not_found( pointSet().end() );
   SmallSet & neighASet = neighA.pointSet();
-  for ( ContainerConstIterator it = local_points.begin();
-      it != it_end;
-      ++it )
-    if ( pointSet().find( *it ) != not_found )
-      neighASet.insertNew( *it ); // insertNew is guaranteed by construction.
+  typename ForegroundAdjacency::VertexCirculator circ = adjacency().begin( p );
+  const DigitalSetConstIterator not_found( pointSet().end() );
+  
+  if( pointSet().find( p ) != not_found )
+  {
+    neighASet.insertNew( p );
+  }
+  if( circ.isValid() )
+  {
+    do
+    {
+      Point point = *(circ.base());
+      if ( pointSet().find( point ) != not_found )
+	neighASet.insertNew( point ); // insertNew is guaranteed by construction.
+      circ++;
+    }
+    while( circ.base() != circ.begin() );
+  }
+  
   return neighA;
 }
 
@@ -354,25 +356,25 @@ typename DGtal::Object<TDigitalTopology, TDigitalSet>::Size
 DGtal::Object<TDigitalTopology, TDigitalSet>
 ::neighborhoodSize( const Point & p ) const
 {
-  typedef std::vector<Point> Container;
-  typedef typename Container::const_iterator ContainerConstIterator;
   typedef typename DigitalSet::ConstIterator DigitalSetConstIterator;
-
-  // Intermediate container that is fast writable.
-  local_points.clear();
-  std::back_insert_iterator< Container > back_ins_it( local_points );
-  adjacency().writeNeighbors( back_ins_it, p );
-  local_points.push_back( p );
-
-  // A neighborhood is small, so is defined the digital object.
-  const ContainerConstIterator it_end( local_points.end() );
-  const DigitalSetConstIterator not_found( pointSet().end() );
   Size nb = 0;
-  for ( ContainerConstIterator it = local_points.begin();
-      it != it_end;
-      ++it )
-    if ( pointSet().find( *it ) != not_found )
-      ++nb;
+  typename ForegroundAdjacency::VertexCirculator circ = adjacency().begin( p );
+  const DigitalSetConstIterator not_found( pointSet().end() );
+  
+  if( pointSet().find(p) != not_found )
+  {
+    nb++;
+  }
+  if( circ.isValid() )
+  {
+    do
+    {
+      if ( pointSet().find( *(circ.base()) ) != not_found )
+	++nb;
+      circ++;
+    }
+    while( circ.base() != circ.begin() );
+  }
   return nb;
 }
 
@@ -393,25 +395,22 @@ typename DGtal::Object<TDigitalTopology, TDigitalSet>::SmallObject
 DGtal::Object<TDigitalTopology, TDigitalSet>::properNeighborhood
 ( const Point & p ) const
 {
-  typedef std::vector<Point> Container;
-  typedef typename Container::const_iterator ContainerConstIterator;
   typedef typename DigitalSet::ConstIterator DigitalSetConstIterator;
-
-  // Intermediate container that is fast writable.
-  local_points.clear();
-  std::back_insert_iterator< Container > back_ins_it( local_points );
-  adjacency().writeNeighbors( back_ins_it, p );
-
-  // A neighborhood is small, so is defined the digital object.
   SmallObject neighA( myTopo, pointSet().domain() );
-  const ContainerConstIterator it_end( local_points.end() );
-  const DigitalSetConstIterator not_found( pointSet().end() );
   SmallSet & neighASet = neighA.pointSet();
-  for ( ContainerConstIterator it = local_points.begin();
-      it != it_end;
-      ++it )
-    if ( pointSet().find( *it ) != not_found )
-      neighASet.insertNew( *it ); // insertNew is guaranteed by construction.
+  typename ForegroundAdjacency::VertexCirculator circ = adjacency().begin( p );
+  const DigitalSetConstIterator not_found( pointSet().end() );
+  if( circ.isValid() )
+  {
+    do
+    {
+      Point point = *(circ.base());
+      if ( pointSet().find( point ) != not_found )
+	neighASet.insertNew( point ); // insertNew is guaranteed by construction.
+      circ++;
+    }
+    while( circ.base() != circ.begin() );
+  }
   return neighA;
 }
 
@@ -432,24 +431,20 @@ typename DGtal::Object<TDigitalTopology, TDigitalSet>::Size
 DGtal::Object<TDigitalTopology, TDigitalSet>
 ::properNeighborhoodSize( const Point & p ) const
 {
-  typedef std::vector<Point> Container;
-  typedef typename Container::const_iterator ContainerConstIterator;
   typedef typename DigitalSet::ConstIterator DigitalSetConstIterator;
-
-  // Intermediate container that is fast writable.
-  local_points.clear();
-  std::back_insert_iterator< Container > back_ins_it( local_points );
-  adjacency().writeNeighbors( back_ins_it, p );
-
-  // A neighborhood is small, so is defined the digital object.
-  const ContainerConstIterator it_end( local_points.end() );
-  const DigitalSetConstIterator not_found( pointSet().end() );
   Size nb = 0;
-  for ( ContainerConstIterator it = local_points.begin();
-      it != it_end;
-      ++it )
-    if ( pointSet().find( *it ) != not_found )
-      ++nb;
+  typename ForegroundAdjacency::VertexCirculator circ = adjacency().begin( p );
+  const DigitalSetConstIterator not_found( pointSet().end() );
+  if( circ.isValid() )
+  {
+    do
+    {
+      if ( pointSet().find( *(circ.base()) ) != not_found )
+	++nb;
+      circ++;
+    }
+    while( circ.base() != circ.begin() );
+  }
   return nb;
 }
 
@@ -464,18 +459,12 @@ inline
 DGtal::Object<TDigitalTopology, TDigitalSet>
 DGtal::Object<TDigitalTopology, TDigitalSet>::border() const
 {
-  typedef std::vector<Point> Container;
-  typedef typename Container::const_iterator ContainerConstIterator;
   typedef typename DigitalSet::ConstIterator DigitalSetConstIterator;
-  typedef typename DigitalSet::ConstIterator DigitalSetConstIterator;
-  //typedef typename Domain::Predicate Predicate;
 
-  // Intermediate container that is fast writable.
-  local_points.clear();
+
   const DigitalSet & mySet = pointSet();
   Object<DigitalTopology, DigitalSet> output( topology(),
       domain() );
-  // mySet.domain() );
   DigitalSet & outputSet = output.pointSet();
 
   // Loop on all points of the set.
@@ -484,21 +473,33 @@ DGtal::Object<TDigitalTopology, TDigitalSet>::border() const
       it != it_end;
       ++it )
   {
-    std::back_insert_iterator< Container > back_ins_it( local_points );
     // Computing neighborhood within domain.
-    topology().lambda().writeNeighbors
-    ( back_ins_it, *it, domain().predicate() );
+    typename ForegroundAdjacency::VertexCirculator circ = topology().lambda().begin( *it );//, domain().predicate() );
+    boost::filter_iterator<typename Domain::Predicate, typename ForegroundAdjacency::VertexCirculator::Iterator> fit = 
+      boost::filter_iterator<typename Domain::Predicate, typename ForegroundAdjacency::VertexCirculator::Iterator>(domain().predicate(), circ.begin(), circ.end());
+    boost::filter_iterator<typename Domain::Predicate, typename ForegroundAdjacency::VertexCirculator::Iterator> fite = 
+      boost::filter_iterator<typename Domain::Predicate, typename ForegroundAdjacency::VertexCirculator::Iterator>(domain().predicate(), circ.end(), circ.end());
     // Checks if any point is not in the object.
-    const ContainerConstIterator itc_end( local_points.end() );
-    for ( ContainerConstIterator itc = local_points.begin();
-        itc != itc_end;
-        ++itc )
-      if ( pointSet().find( *itc ) == it_end )
+    for( ; fit != fite; fit++ )
+    {
+      if ( pointSet().find( *fit ) == it_end )
+	{
+	  outputSet.insertNew( *it );
+	  break;
+	}
+    }
+    /*if( circ.isValid() )
+    {
+      do
       {
-        outputSet.insertNew( *it );
-        break;
+	if ( pointSet().find( *(circ.base()) ) == it_end )
+	{
+	  outputSet.insertNew( *it );
+	  break;
+	}
       }
-    local_points.clear();
+      while( circ.base() != circ.begin() );
+    }*/
   }
   return output;
 }
@@ -729,6 +730,46 @@ writeNeighbors( OutputIterator & it,
     if ( pointSet().find( *cit ) != not_found && pred(*cit) )
       *it++ = *cit;
 }
+
+
+
+
+/**
+ * Provides a circulator which iterates over the neighbors of a vertex v.
+ * 
+ * 
+ * @param v the vertex whose neighbors will be visited
+ * 
+ * @return a circulator on the neighborhood
+ */
+template <typename TDigitalTopology, typename TDigitalSet>
+inline
+typename DGtal::Object<TDigitalTopology, TDigitalSet>::VertexCirculator
+DGtal::Object<TDigitalTopology, TDigitalSet>::begin(const Vertex & v)
+{
+  /*VertexVector vect;
+  typename ForegroundAdjacency::VertexCirculator circ = adjacency().begin(v);
+  if( circ.isValid() )
+  {
+    do
+    {
+      Vertex v = *(circ.base());
+      if( pointSet().find( v ) != pointSet.end() )
+	vect.push_back(v);
+    }
+    while( circ.base() != circ.begin() );
+  }
+  typename VertexVector::iterator itb = vect.begin();
+  typename VertexVector::iterator ite = vect.end();
+  return VertexCirculator(itb, itb, ite);*/
+  typename ForegroundAdjacency::VertexCirculator circ = adjacency().begin(v);
+  ObjectPredicate pred;
+  filterIterator itb = filterIterator(pred, circ.begin(), circ.end());
+  filterIterator ite = filterIterator(pred, circ.end(), circ.end());
+  return VertexCirculator(itb, itb, ite);
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////
 // ----------------------- Simple points -------------------------------
 

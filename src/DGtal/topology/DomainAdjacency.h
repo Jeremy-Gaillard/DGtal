@@ -47,9 +47,8 @@
 #include "DGtal/kernel/domains/DomainPredicate.h"
 #include "DGtal/topology/CAdjacency.h"
 #include "DGtal/kernel/sets/DigitalSetSelector.h"
-#include "DGtal/kernel/BasicPointFunctors.h"
-#include "DGtal/base/ConstIteratorAdapter.h"
 #include "DGtal/base/Circulator.h"
+#include <boost/iterator/filter_iterator.hpp>
 //////////////////////////////////////////////////////////////////////////////
 
 namespace DGtal
@@ -95,9 +94,8 @@ namespace DGtal
     template <typename Value> struct VertexMap {
       typedef typename std::map<Vertex, Value> Type;
     };
-    typedef typename std::vector<Vertex> VertexVector;
-    typedef ConstIteratorAdapter< typename VertexVector::iterator, OffsetFunctor<Point> > OffsetIterator;
-    typedef Circulator< OffsetIterator > VertexCirculator;
+    typedef boost::filter_iterator<Predicate, typename Adjacency::VertexCirculator::Iterator> filterIterator;
+    typedef Circulator< filterIterator > VertexCirculator;
     
     // ----------------------- Standard services ------------------------------
   public:
@@ -218,25 +216,8 @@ namespace DGtal
      * @return a circulator on the neighborhood
      */
     VertexCirculator
-    begin(const Vertex & v);
+    begin(const Vertex & v) const;
     
-    /**
-     * Provides a circulator which iterates over the neighbors of a vertex v
-     * which satisfy a predicate.
-     * 
-     * 
-     * @tparam VertexPredicate the type of the predicate
-     * 
-     * 
-     * @param v the vertex whose neighbors will be visited
-     * 
-     * @param pred the predicate that must be satisfied
-     * 
-     * @return a circulator on the neighborhood
-     */
-    template <typename VertexPredicate>
-    VertexCirculator
-    begin(const Vertex & v, const VertexPredicate & pred);
     
     // ----------------------- Interface --------------------------------------
   public:

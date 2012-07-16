@@ -230,46 +230,14 @@ template <typename TSpace, Dimension maxNorm1, Dimension dimension>
 typename DGtal::MetricAdjacency<TSpace,maxNorm1,dimension>::VertexCirculator
 DGtal::MetricAdjacency<TSpace,maxNorm1,dimension>::begin(const Vertex & v)
 {
-  typename VertexVector::iterator itb = neighborTemplate.begin();
-  typename VertexVector::iterator ite = neighborTemplate.end();
+  typename VertexVector::const_iterator itb = neighborTemplate.begin();
+  typename VertexVector::const_iterator ite = neighborTemplate.end();
   OffsetIterator offitb(itb, OffsetFunctor<Point>(v));
   OffsetIterator offite(ite, OffsetFunctor<Point>(v));
   return VertexCirculator(offitb, offitb, offite);
 }
 
-/**
- * Provides a circulator which iterates over the neighbors of a vertex v
- * which satisfy a predicate.
- * 
- * 
- * @tparam VertexPredicate the type of the predicate
- * 
- * 
- * @param v the vertex whose neighbors will be visited
- * 
- * @param pred the predicate that must be satisfied
- * 
- * @return a circulator on the neighborhood
- */
-template <typename TSpace, Dimension maxNorm1, Dimension dimension>
-template <typename VertexPredicate>
-typename DGtal::MetricAdjacency<TSpace,maxNorm1,dimension>::VertexCirculator
-DGtal::MetricAdjacency<TSpace,maxNorm1,dimension>::begin(const Vertex & v, const VertexPredicate & pred)
-{
-  VertexVector vect;
-  VertexCirculator circ = begin(v);
-  do
-  {
-    Vertex v = *(circ.base());
-    if( pred(v) )
-      vect.push_back(v);
-    circ++;
-  }
-  while( circ.base() != circ.begin() );
-  typename VertexVector::iterator itb = vect.begin();
-  typename VertexVector::iterator ite = vect.end();
-  return VertexCirculator(itb, itb, ite);
-}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Interface - public :
@@ -386,7 +354,7 @@ namespace DGtal {
       typedef typename std::map<Vertex, Value> Type;
     };
     typedef typename std::vector<Vertex> VertexVector;
-    typedef ConstIteratorAdapter< typename VertexVector::iterator, OffsetFunctor<Point> > OffsetIterator;
+    typedef ConstIteratorAdapter< typename VertexVector::const_iterator, OffsetFunctor<Point> > OffsetIterator;
     typedef Circulator< OffsetIterator > VertexCirculator;
   
     // ----------------------- Standard services ------------------------------
@@ -477,33 +445,13 @@ namespace DGtal {
     VertexCirculator
     begin(const Vertex & v)
     {
-      typename VertexVector::iterator itb = neighborTemplate.begin();
-      typename VertexVector::iterator ite = neighborTemplate.end();
+      typename VertexVector::const_iterator itb = neighborTemplate.begin();
+      typename VertexVector::const_iterator ite = neighborTemplate.end();
       OffsetIterator offitb(itb, OffsetFunctor<Point>(v));
       OffsetIterator offite(ite, OffsetFunctor<Point>(v));
       return VertexCirculator(offitb, offitb, offite);
     }
     
-    template <typename VertexPredicate>
-    inline
-    static
-    VertexCirculator
-    begin(const Vertex & v, const VertexPredicate & pred)
-    {
-      VertexVector vect;
-      VertexCirculator circ = begin(v);
-      do
-      {
-	Vertex v = *(circ.base());
-	if( pred(v) )
-	  vect.push_back(v);
-	circ++;
-      }
-      while( circ.base() != circ.begin() );
-      typename VertexVector::iterator itb = vect.begin();
-      typename VertexVector::iterator ite = vect.end();
-      return VertexCirculator(itb, itb, ite);
-    }
 
     
     // ----------------------- Interface --------------------------------------
@@ -571,7 +519,7 @@ DGtal::MetricAdjacency<TSpace,2,2>::neighborTemplate = DGtal::MetricAdjacency<TS
       typedef typename std::map<Vertex, Value> Type;
     };
     typedef typename std::vector<Vertex> VertexVector;
-    typedef ConstIteratorAdapter< typename VertexVector::iterator, OffsetFunctor<Point> > OffsetIterator;
+    typedef ConstIteratorAdapter< typename VertexVector::const_iterator, OffsetFunctor<Point> > OffsetIterator;
     typedef Circulator< OffsetIterator > VertexCirculator;
     
     // ----------------------- Standard services ------------------------------
@@ -648,33 +596,13 @@ DGtal::MetricAdjacency<TSpace,2,2>::neighborTemplate = DGtal::MetricAdjacency<TS
     VertexCirculator
     begin(const Vertex & v)
     {
-      typename VertexVector::iterator itb = neighborTemplate.begin();
-      typename VertexVector::iterator ite = neighborTemplate.end();
+      typename VertexVector::const_iterator itb = neighborTemplate.begin();
+      typename VertexVector::const_iterator ite = neighborTemplate.end();
       OffsetIterator offitb(itb, OffsetFunctor<Point>(v));
       OffsetIterator offite(ite, OffsetFunctor<Point>(v));
       return VertexCirculator(offitb, offitb, offite);
     }
     
-    template <typename VertexPredicate>
-    inline
-    static
-    VertexCirculator
-    begin(const Vertex & v, const VertexPredicate & pred)
-    {
-      VertexVector vect;
-      VertexCirculator circ = begin(v);
-      do
-      {
-	Vertex v = *(circ.base());
-	if( pred(v) )
-	  vect.push_back(v);
-	circ++;
-      }
-      while( circ.base() != circ.begin() );
-      typename VertexVector::iterator itb = vect.begin();
-      typename VertexVector::iterator ite = vect.end();
-      return VertexCirculator(itb, itb, ite);
-    }
 
     
     // ----------------------- Interface --------------------------------------
@@ -740,7 +668,7 @@ DGtal::MetricAdjacency<TSpace,1,2>::neighborTemplate = DGtal::MetricAdjacency<TS
       typedef typename std::map<Vertex, Value> Type;
     };
     typedef typename std::vector<Vertex> VertexVector;
-    typedef ConstIteratorAdapter< typename VertexVector::iterator, OffsetFunctor<Point> > OffsetIterator;
+    typedef ConstIteratorAdapter< typename VertexVector::const_iterator, OffsetFunctor<Point> > OffsetIterator;
     typedef Circulator< OffsetIterator > VertexCirculator;
   
     // ----------------------- Standard services ------------------------------
@@ -879,32 +807,11 @@ DGtal::MetricAdjacency<TSpace,1,2>::neighborTemplate = DGtal::MetricAdjacency<TS
     VertexCirculator
     begin(const Vertex & v)
     {
-      typename VertexVector::iterator itb = neighborTemplate.begin();
-      typename VertexVector::iterator ite = neighborTemplate.end();
+      typename VertexVector::const_iterator itb = neighborTemplate.begin();
+      typename VertexVector::const_iterator ite = neighborTemplate.end();
       OffsetIterator offitb(itb, OffsetFunctor<Point>(v));
       OffsetIterator offite(ite, OffsetFunctor<Point>(v));
       return VertexCirculator(offitb, offitb, offite);
-    }
-    
-    template <typename VertexPredicate>
-    inline
-    static
-    VertexCirculator
-    begin(const Vertex & v, const VertexPredicate & pred)
-    {
-      VertexVector vect;
-      VertexCirculator circ = begin(v);
-      do
-      {
-	Vertex v = *(circ.base());
-	if( pred(v) )
-	  vect.push_back(v);
-	circ++;
-      }
-      while( circ.base() != circ.begin() );
-      typename VertexVector::iterator itb = vect.begin();
-      typename VertexVector::iterator ite = vect.end();
-      return VertexCirculator(itb, itb, ite);
     }
 
     
@@ -993,7 +900,7 @@ DGtal::MetricAdjacency<TSpace,3,3>::neighborTemplate = DGtal::MetricAdjacency<TS
       typedef typename std::map<Vertex, Value> Type;
     };
     typedef typename std::vector<Vertex> VertexVector;
-    typedef ConstIteratorAdapter< typename VertexVector::iterator, OffsetFunctor<Point> > OffsetIterator;
+    typedef ConstIteratorAdapter< typename VertexVector::const_iterator, OffsetFunctor<Point> > OffsetIterator;
     typedef Circulator< OffsetIterator > VertexCirculator;
   
     // ----------------------- Standard services ------------------------------
@@ -1112,33 +1019,13 @@ DGtal::MetricAdjacency<TSpace,3,3>::neighborTemplate = DGtal::MetricAdjacency<TS
     VertexCirculator
     begin(const Vertex & v)
     {
-      typename VertexVector::iterator itb = neighborTemplate.begin();
-      typename VertexVector::iterator ite = neighborTemplate.end();
+      typename VertexVector::const_iterator itb = neighborTemplate.begin();
+      typename VertexVector::const_iterator ite = neighborTemplate.end();
       OffsetIterator offitb(itb, OffsetFunctor<Point>(v));
       OffsetIterator offite(ite, OffsetFunctor<Point>(v));
       return VertexCirculator(offitb, offitb, offite);
     }
     
-    template <typename VertexPredicate>
-    inline
-    static
-    VertexCirculator
-    begin(const Vertex & v, const VertexPredicate & pred)
-    {
-      VertexVector vect;
-      VertexCirculator circ = begin(v);
-      do
-      {
-	Vertex v = *(circ.base());
-	if( pred(v) )
-	  vect.push_back(v);
-	circ++;
-      }
-      while( circ.base() != circ.begin() );
-      typename VertexVector::iterator itb = vect.begin();
-      typename VertexVector::iterator ite = vect.end();
-      return VertexCirculator(itb, itb, ite);
-    }
 
     
     // ----------------------- Interface --------------------------------------
@@ -1217,7 +1104,7 @@ DGtal::MetricAdjacency<TSpace,2,3>::neighborTemplate = DGtal::MetricAdjacency<TS
       typedef typename std::map<Vertex, Value> Type;
     };
     typedef typename std::vector<Vertex> VertexVector;
-    typedef ConstIteratorAdapter< typename VertexVector::iterator, OffsetFunctor<Point> > OffsetIterator;
+    typedef ConstIteratorAdapter< typename VertexVector::const_iterator, OffsetFunctor<Point> > OffsetIterator;
     typedef Circulator< OffsetIterator > VertexCirculator;
   
     // ----------------------- Standard services ------------------------------
@@ -1305,33 +1192,13 @@ DGtal::MetricAdjacency<TSpace,2,3>::neighborTemplate = DGtal::MetricAdjacency<TS
     VertexCirculator
     begin(const Vertex & v)
     {
-      typename VertexVector::iterator itb = neighborTemplate.begin();
-      typename VertexVector::iterator ite = neighborTemplate.end();
+      typename VertexVector::const_iterator itb = neighborTemplate.begin();
+      typename VertexVector::const_iterator ite = neighborTemplate.end();
       OffsetIterator offitb(itb, OffsetFunctor<Point>(v));
       OffsetIterator offite(ite, OffsetFunctor<Point>(v));
       return VertexCirculator(offitb, offitb, offite);
     }
     
-    template <typename VertexPredicate>
-    inline
-    static
-    VertexCirculator
-    begin(const Vertex & v, const VertexPredicate & pred)
-    {
-      VertexVector vect;
-      VertexCirculator circ = begin(v);
-      do
-      {
-	Vertex v = *(circ.base());
-	if( pred(v) )
-	  vect.push_back(v);
-	circ++;
-      }
-      while( circ.base() != circ.begin() );
-      typename VertexVector::iterator itb = vect.begin();
-      typename VertexVector::iterator ite = vect.end();
-      return VertexCirculator(itb, itb, ite);
-    }
 
     // ----------------------- Interface --------------------------------------
   public:

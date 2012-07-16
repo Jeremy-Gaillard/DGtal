@@ -48,6 +48,8 @@
 #include "DGtal/kernel/sets/CDigitalSet.h"
 #include "DGtal/kernel/sets/DigitalSetSelector.h"
 #include "DGtal/topology/Topology.h"
+#include "DGtal/base/Circulator.h"
+#include <boost/iterator/filter_iterator.hpp>
 //////////////////////////////////////////////////////////////////////////////
 
 namespace DGtal
@@ -116,6 +118,7 @@ namespace DGtal
       };
       typedef typename DigitalSet::ConstIterator ConstIterator;
       
+      
       // Required by CUndirectedSimpleGraph
       struct Edge
       {
@@ -151,7 +154,21 @@ namespace DGtal
 		&& ( vertices[ 1 ] < other.vertices[ 1 ] ) );
 	}
       };
-      // ... End added
+      
+      class ObjectPredicate
+      {
+      public:
+	ObjectPredicate()
+	{ }
+	
+	bool operator()(const Point & p)
+	{
+	  return (myPointSet.find(p) != myPointSet.end());
+	}
+      };
+      
+      typedef boost::filter_iterator<ObjectPredicate, typename ForegroundAdjacency::VertexCirculator::Iterator> filterIterator;
+      typedef Circulator< filterIterator > VertexCirculator;
 
 
       /**
@@ -489,6 +506,17 @@ namespace DGtal
       writeNeighbors( OutputIterator &it ,
                       const Vertex & v,
                       const VertexPredicate & pred) const;
+      
+      /**
+       * Provides a circulator which iterates over the neighbors of a vertex v.
+       * 
+       * 
+       * @param v the vertex whose neighbors will be visited
+       * 
+       * @return a circulator on the neighborhood
+       */
+      VertexCirculator
+      begin(const Vertex & v);
       
       
       // ----------------------- Simple points -------------------------------

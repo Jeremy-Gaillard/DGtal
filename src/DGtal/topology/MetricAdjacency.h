@@ -102,7 +102,7 @@ namespace DGtal
       typedef typename std::map<Vertex, Value> Type;
     };
     typedef typename std::vector<Vertex> VertexVector;
-    typedef ConstIteratorAdapter< typename VertexVector::iterator, OffsetFunctor<Point> > OffsetIterator;
+    typedef ConstIteratorAdapter< typename VertexVector::const_iterator, OffsetFunctor<Point> > OffsetIterator;
     typedef Circulator< OffsetIterator > VertexCirculator;
 
     // ----------------------- Standard services ------------------------------
@@ -211,24 +211,6 @@ namespace DGtal
     VertexCirculator
     begin(const Vertex & v);
     
-    /**
-    * Provides a circulator which iterates over the neighbors of a vertex v
-    * which satisfy a predicate.
-    * 
-    * 
-    * @tparam VertexPredicate the type of the predicate
-    * 
-    * 
-    * @param v the vertex whose neighbors will be visited
-    * 
-    * @param pred the predicate that must be satisfied
-    * 
-    * @return a circulator on the neighborhood
-    */
-    template <typename VertexPredicate>
-    static
-    VertexCirculator
-    begin(const Vertex & v, const VertexPredicate & pred);
     
     // ----------------------- Interface --------------------------------------
   public:

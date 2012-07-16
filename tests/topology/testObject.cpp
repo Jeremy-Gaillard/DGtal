@@ -195,7 +195,7 @@ bool testObject()
   nb++;
   trace.info() << "(" << nbok << "/" << nb << ") "
          << "neigh = disk_object, size() = " << neigh.size() 
-         << " == 636100" << std::endl;
+         << " == 7824" << std::endl;
   SmallObjectType neigh2 = disk_object2.neighborhood( c );
   DigitalSetConverter<SmallSet>::assign
     ( neigh.pointSet(), neigh2.pointSet() );
@@ -212,13 +212,13 @@ bool testObject()
   nb++;
   trace.info() << "(" << nbok << "/" << nb << ") "
          << "Border(Disk, c), size() = " << bdisk.size() 
-         << " == 3372" << std::endl;
+         << " == 400" << std::endl;
   ObjectType bdisk2 = disk_object2.border();
   nbok += bdisk2.size() == 392 ? 1 : 0;
   nb++;
   trace.info() << "(" << nbok << "/" << nb << ") "
          << "Border(Disk2, c), size() = " << bdisk2.size() 
-         << " == 3364" << std::endl;
+         << " == 392" << std::endl;
   trace.endBlock();
 
   trace.beginBlock ( "Testing expansion by layers on the boundary ..." );
