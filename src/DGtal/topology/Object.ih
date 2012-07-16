@@ -745,7 +745,7 @@ writeNeighbors( OutputIterator & it,
 template <typename TDigitalTopology, typename TDigitalSet>
 inline
 typename DGtal::Object<TDigitalTopology, TDigitalSet>::VertexCirculator
-DGtal::Object<TDigitalTopology, TDigitalSet>::begin(const Vertex & v)
+DGtal::Object<TDigitalTopology, TDigitalSet>::begin(const Vertex & v) const
 {
   /*VertexVector vect;
   typename ForegroundAdjacency::VertexCirculator circ = adjacency().begin(v);

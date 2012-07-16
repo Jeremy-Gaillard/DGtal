@@ -516,7 +516,7 @@ namespace DGtal
        * @return a circulator on the neighborhood
        */
       VertexCirculator
-      begin(const Vertex & v);
+      begin(const Vertex & v) const;
       
       
       // ----------------------- Simple points -------------------------------
