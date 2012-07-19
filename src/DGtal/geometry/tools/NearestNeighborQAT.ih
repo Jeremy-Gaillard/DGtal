@@ -34,18 +34,45 @@
 ///////////////////////////////////////////////////////////////////////////////
 // IMPLEMENTATION of inline methods.
 ///////////////////////////////////////////////////////////////////////////////
-
+#include "DGtal/geometry/tools/NearestNeighborQAT.h"
 ///////////////////////////////////////////////////////////////////////////////
 // ----------------------- Standard services ------------------------------
 
-
+template<typename TImageContainer>
+DGtal::NearestNeighborQAT::
+NearestNeighborQAT( const Matrix & M, const Value & omega, const Vector & V )
+{
+  myM = M;
+  myOmega = omega;
+  myV = V;
+  inverse();
+}
 
 ///////////////////////////////////////////////////////////////////////////////
-// Interface - public :
+// ----------------------- Hidden services ------------------------------
 
+template<typename TImageContainer>
+const
+typename DGtal::NaiveQAT<TImageContainer>::Point
+DGtal::NearestNeighborQAT<TImageContainer>::calculate ( const Point & p ) const
+{
+  Point returnValue = myM * p + myV;
+  for( Dimension d = 0; d != dimension; d++ )
+  {
+    returnValue[d] /= myOmega;
+  }
+  return returnValue;
+}
 
-
-
+template<typename TImageContainer>
+void
+DGtal::NearestNeighborQAT<TImageContainer>::inverse()
+{
+  myOmegaInv = myM.determinant();
+  assert( myOmegaInv != 0 && "M must be inversible");
+  myMInv = ((myM.cofactor()).transpose() * myOmega);
+  myVInv = (myM.cofactor()).transpose() * myV * -1;
+}
 
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////

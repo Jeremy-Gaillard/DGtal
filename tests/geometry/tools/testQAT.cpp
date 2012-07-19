@@ -41,10 +41,13 @@
 #include "DGtal/io/boards/Board2D.h"
 
 #include "DGtal/base/Common.h"
-#include "DGtal/geometry/tools/NaiveQAT.h"
 #include "DGtal/kernel/SimpleMatrix.h"
 #include "DGtal/helpers/StdDefs.h"
 #include "DGtal/images/ImageContainerBySTLVector.h"
+#include "DGtal/geometry/tools/NaiveQAT.h"
+#include "DGtal/geometry/tools/NearestNeighborQAT.h"
+
+#include "DGtal/images/CConstImage.h"
 
 //#include "DGtal/io/readers/MagickReader.h"
 
@@ -57,6 +60,44 @@ using namespace DGtal;
 using namespace Z2i;
 
 typedef ImageContainerBySTLVector<Z2i::Domain, int> Image;
+
+
+void testNearestNeighborQAT(const Image & image, const SimpleMatrix<int, 2, 2> & Mat, const int & omega, const Point & vect)
+{
+  BOOST_CONCEPT_ASSERT(( CConstImage<NearestNeighborQAT<Image> > ));
+}
+
+void testNaiveQAT(const Image & image, const SimpleMatrix<int, 2, 2> & Mat, const int & omega, const Point & vect)
+{
+  BOOST_CONCEPT_ASSERT(( CConstImage<NaiveQAT<Image> > ));
+  
+  NaiveQAT<Image> QAT( Mat, omega, vect);
+  QAT.transformImage(image);
+  Domain newDomain = QAT.domain();
+  
+  Board2D board;
+  board << SetMode( newDomain.className(), "Paving" )
+    << newDomain
+    << SetMode( newDomain.lowerBound().className(), "Paving" );
+  string specificStyle = newDomain.lowerBound().className() + "/Paving";
+  
+  GradientColorMap<int> cmap_grad( 1, 20 );
+  cmap_grad.addColor( Color( 50, 50, 255 ) );
+  cmap_grad.addColor( Color( 255, 0, 0 ) );
+  cmap_grad.addColor( Color( 255, 255, 10 ) );
+  
+  
+  for ( typename Domain::Iterator it = newDomain.begin(); it != newDomain.end(); it++ )	
+  {
+      board << CustomStyle( specificStyle,
+          new CustomColors( Color::Black,
+          cmap_grad( QAT(*it) ) ) )
+          << *it;
+  }
+  
+  board.saveEPS("testNaiveQAT.eps");
+}
+
 
 int main()
 {
@@ -84,30 +125,9 @@ int main()
   Mat.setComponent(1, 1, 4);
   int omega = 1;
   Point vect(0, 0);
-  NaiveQAT<Image> QAT( Mat, omega, vect);
-  QAT.transformImage(image);
-  Domain newDomain = QAT.domain();
   
-  Board2D board;
-  board << SetMode( newDomain.className(), "Paving" )
-  << newDomain
-  << SetMode( p1.className(), "Paving" );
-  string specificStyle = p1.className() + "/Paving";
+  testNaiveQAT(image, Mat, omega, vect);
   
-  GradientColorMap<int> cmap_grad( 1, 20 );
-  cmap_grad.addColor( Color( 50, 50, 255 ) );
-  cmap_grad.addColor( Color( 255, 0, 0 ) );
-  cmap_grad.addColor( Color( 255, 255, 10 ) );
-  
-  
-  for ( typename Domain::Iterator it = newDomain.begin(); it != newDomain.end(); it++ )	
-  {
-      board << CustomStyle( specificStyle,
-          new CustomColors( Color::Black,
-          cmap_grad( QAT(*it) ) ) )
-          << *it;
-  }
-  
-  board.saveEPS("testQAT.eps");
+  testNearestNeighborQAT(image, Mat, omega, vect);
   
 }

@@ -42,6 +42,10 @@
 // Inclusions
 #include <iostream>
 #include "DGtal/base/Common.h"
+#include "DGtal/kernel/sets/DigitalSetSelector.h"
+#include "DGtal/kernel/SimpleMatrix.h"
+#include "DGtal/base/CowPtr.h"
+#include "DGtal/images/CConstImage.h"
 //////////////////////////////////////////////////////////////////////////////
 
 namespace DGtal
@@ -50,19 +54,18 @@ namespace DGtal
   /////////////////////////////////////////////////////////////////////////////
   // template class FastQAT
   /**
-   * @brief Aim: Computes the preimage of the 2D Euclidean shapes 
-   * crossing a sequence of n straigth segments in O(n),
-   * with the algorithm of O'Rourke (1981). 
+   * @brief Aim : computes a quasi-affine transformation (M+V)/omega 
+   * of an image using a fast algorithm
    *
    * \b Model of CConstImage
    *
    *
-   * @tparam TImageContainer any model of CImage
+   * @tparam TImageContainer any model of CConstImage
    */
   template <typename TImageContainer>
   class FastQAT
   {
-    BOOST_CONCEPT_ASSERT(( CImage<TImageContainer> ));
+    BOOST_CONCEPT_ASSERT(( CConstImage<TImageContainer> ));
 
 
     // ----------------------- Types ------------------------------
@@ -72,8 +75,15 @@ namespace DGtal
     typedef typename TImageContainer::Point Point;
     typedef typename TImageContainer::Value Value;
     typedef typename TImageContainer::ConstRange ConstRange;
+    typedef CowPtr<TImageContainer> ImagePointer;
     
+    typedef typename DigitalSetSelector
+	< Domain, SMALL_DS+HIGH_ITER_DS >
+	::Type Paving;
 
+    typedef typename Domain::Dimension Dimension;
+    
+    static const Dimension dimension = Domain::dimension;
   private:
 
     
@@ -85,8 +95,14 @@ namespace DGtal
 
     /**
      * Constructor.
+     * 
+     * @param M transformation matrix
+     * 
+     * @param omega
+     * 
+     * @param V translation vector
      */
-    FastQAT(/*M, omega, V*/);
+    FastQAT( const Matrix & M, const Value & omega, const Vector & V );
 
     /**
      * Destructor. Does nothing.
@@ -107,7 +123,7 @@ namespace DGtal
      */
     const Domain & domain() const
     {
-      return myDomain;
+      return myImage->domain();
     }
     
     /**
@@ -116,7 +132,10 @@ namespace DGtal
      *
      * @return a range.
      */
-    ConstRange constRange() const;
+    ConstRange constRange() const
+    {
+      return myImage->constRange();
+    }
     
     /**
      * Get the value of the transformed image at a given 
@@ -138,12 +157,31 @@ namespace DGtal
      * Writes/Displays the object on an output stream.
      * @param out the output stream where the object is written.
      */
-    void selfDisplay ( std::ostream & out ) const;
+    void selfDisplay ( std::ostream & out ) const
+    {
+      myImage->selfDisplay();
+    }
 
 
     // ------------------------- Protected Datas ------------------------------
   protected:
-    Domain myDomain;
+    /**
+     * QAT parameters
+     */
+    Matrix myM;
+    Vector myV;
+    Value myOmega;
+    /**
+     * Inverted components
+     */
+    Matrix myMInv;
+    Vector myVInv;
+    Value myOmegaInv;
+    
+    /**
+     * Transformed image
+     */
+    ImagePointer myImage;
     
     // ------------------------- Private Datas --------------------------------
   private:

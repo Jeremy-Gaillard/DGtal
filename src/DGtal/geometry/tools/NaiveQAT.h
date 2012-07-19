@@ -43,8 +43,8 @@
 #include <iostream>
 #include "DGtal/base/Common.h"
 #include "DGtal/kernel/SimpleMatrix.h"
-#include "DGtal/kernel/sets/DigitalSetSelector.h"
 #include "DGtal/base/CowPtr.h"
+#include "DGtal/images/CConstImage.h"
 //////////////////////////////////////////////////////////////////////////////
 
 namespace DGtal
@@ -53,19 +53,18 @@ namespace DGtal
   /////////////////////////////////////////////////////////////////////////////
   // template class NaiveQAT
   /**
-   * @brief Aim: Computes the preimage of the 2D Euclidean shapes 
-   * crossing a sequence of n straigth segments in O(n),
-   * with the algorithm of O'Rourke (1981). 
+   * @brief Aim : computes a quasi-affine transformation (M+V)/omega 
+   * of an image using a naive algorithm
    *
    * \b Model of CConstImage
    *
    *
-   * @tparam TImageContainer any model of CImage
+   * @tparam TImageContainer any model of CConstImage
    */
   template <typename TImageContainer>
   class NaiveQAT
   {
-    //BOOST_CONCEPT_ASSERT(( CImage<TImageContainer> ));
+    BOOST_CONCEPT_ASSERT(( CConstImage<TImageContainer> ));
 
 
     // ----------------------- Types ------------------------------
@@ -83,9 +82,6 @@ namespace DGtal
     
     typedef SimpleMatrix<Value, dimension, dimension> Matrix;
     typedef typename Matrix::ColumnVector Vector;	// Same as point
-    typedef typename DigitalSetSelector
-	< Domain, SMALL_DS+HIGH_ITER_DS >
-	::Type Paving;
     
     
 
@@ -100,6 +96,12 @@ namespace DGtal
 
     /**
      * Constructor.
+     * 
+     * @param M transformation matrix
+     * 
+     * @param omega
+     * 
+     * @param V translation vector
      */
     NaiveQAT( const Matrix & M, const Value & omega, const Vector & V );
     
@@ -168,11 +170,17 @@ namespace DGtal
      * Writes/Displays the object on an output stream.
      * @param out the output stream where the object is written.
      */
-    void selfDisplay ( std::ostream & out ) const;
+    void selfDisplay ( std::ostream & out ) const
+    {
+      myImage->selfDisplay();
+    }
 
 
     // ------------------------- Protected Datas ------------------------------
   protected:
+    /**
+     * QAT parameters
+     */
     Matrix myM;
     Vector myV;
     Value myOmega;
@@ -183,10 +191,10 @@ namespace DGtal
     Vector myVInv;
     Value myOmegaInv;
     
+    /**
+     * Transformed image
+     */
     ImagePointer myImage;
-    
-    std::vector<Paving> myPavings;
-    std::vector<Paving> myPavingsRemainder;
     
     
     // ------------------------- Private Datas --------------------------------
@@ -198,7 +206,7 @@ namespace DGtal
     NaiveQAT();
     
     /**
-      * computes the image of a point
+      * Computes the image of a point
       *
       * @param p the initial point
       *
@@ -207,11 +215,11 @@ namespace DGtal
     const Point calculate ( const Point & p ) const;
     
     /**
-      * computes the minimum and maximum coordinates in the final image : min_x, min_y, max_x, max_y
+      * Computes the domain of the final image
       *
       * @param domain the initial image's domain
       *
-      * @return the matrix : (min_i, min_j, max_i, max_j)
+      * @return the final image's domain
       */
     Domain getImageBound ( const Domain domain );
     
@@ -219,8 +227,11 @@ namespace DGtal
     
     void recursiveColor( double & val, double & div, const std::vector<double> & x,
 			 const std::vector<double> & r, const std::vector<double> & l,
-			 const ImageContainer & image, int start, const std::vector<bool> & sequence ) const;
+			 const ImageContainer & image, int start, double localDiv, Point localPoint/*const std::vector<bool> & sequence*/ ) const;
     
+    /**
+     * Finds all the vertices of @a myDomain
+     */
     void getAllVertices( std::vector<Point> & vertices, const Dimension & start, 
 		const Point & startPoint, const Point & endPoint ) const;
 		
@@ -228,6 +239,9 @@ namespace DGtal
 			     Dimension dim, std::vector<typename Point::Component> & components,
 			     const std::vector<Point> & incr, Point & Pp, const ImageContainer & image );
 
+    /**
+     * Computes the inverse of the QAT
+     */
     void inverse();
 
   private:

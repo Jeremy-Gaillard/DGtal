@@ -45,8 +45,6 @@ DGtal::NaiveQAT<TImageContainer>::NaiveQAT(const Matrix & M, const Value & omega
   myOmega = omega;
   myV = V;
   inverse();
-  // TODO : throw exception if det = 0
-  // myInverseM = (myM.cofactor()).transpose() * ( myOmega / myM.determinant() );
 }
 
 template<typename TImageContainer>
@@ -60,20 +58,19 @@ DGtal::NaiveQAT<TImageContainer>::transformImage( const ImageContainer & image )
 {
   Domain transformedDomain = getImageBound( image.domain() );
   myImage = ImagePointer(new TImageContainer(transformedDomain));
-  //typename ImageContainer::Range::Iterator re = myImage->range().end();
-  //for( typename ImageContainer::Range::Iterator r = myImage->range().begin(); r != re; r++)
-  //  *r = 0;
   
   Point lowerBound = transformedDomain.lowerBound();
   Point upperBound = transformedDomain.upperBound();
+  // Antecedent point, initialized as the antecedent point of the lower bound
   Point Pp = myMInv * lowerBound + myVInv;
+  // Incrementation in each dimension for each step performed
   std::vector<Point> incr;
   for( Dimension d = 0; d != dimension; d++ )
   {
     Point vect = Point::zero;
     vect[d] = 1;
     if( d != dimension - 1 )
-      vect[d+1] = - upperBound[d]; // uncertain
+      vect[d+1] = - upperBound[d];
     incr.push_back(myMInv * vect);
   }
   std::vector<typename Point::Component> components;
@@ -81,6 +78,11 @@ DGtal::NaiveQAT<TImageContainer>::transformImage( const ImageContainer & image )
   recursiveTransform( lowerBound, upperBound, (Dimension) 0, components, 
 		      incr, Pp, image );
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+// ----------------------- Hidden services ------------------------------
+
 
 template<typename TImageContainer>
 void
@@ -120,8 +122,11 @@ typename DGtal::NaiveQAT<TImageContainer>::Value
 DGtal::NaiveQAT<TImageContainer>::
 backwardColorLinear( const Point & Pp, const ImageContainer & image )
 {
+  // the real coordinates of the point
   std::vector<double> x;
+  // the coefficients applied to the ceiling
   std::vector<double> r;
+  // the coefficients applied to the floor
   std::vector<double> l;
   
   double val = 0;
@@ -134,7 +139,7 @@ backwardColorLinear( const Point & Pp, const ImageContainer & image )
   }
   
   double div = 0;
-  recursiveColor(val, div, x, r, l, image, 0, std::vector<bool>());
+  recursiveColor(val, div, x, r, l, image, 0, 0, Point::zero);
   if( div )
   {
     val /= div;
@@ -146,43 +151,32 @@ template<typename TImageContainer>
 void
 DGtal::NaiveQAT<TImageContainer>::recursiveColor( double & val, double & div, const std::vector<double> & x,
 			 const std::vector<double> & r, const std::vector<double> & l,
-			 const ImageContainer & image, int start, const std::vector<bool> & sequence ) const
+			 const ImageContainer & image, int dim, double localDiv, Point localPoint/*const std::vector<bool> & sequence*/) const
 {
-  if( start != dimension )
+  if( dim != dimension )
   {
-    //std::vector<double>::const_iterator ite = x.end();
-    //for( std::vector<double>::const_iterator it = x.begin() + start; it != ite; it++ )
     {
-      typename Point::Component low = image.domain().lowerBound()[start];
-      typename Point::Component up = image.domain().upperBound()[start];
-      //start++;
-      if( low <= floor(x[start]) && floor(x[start]) <= up )
+      typename Point::Component low = image.domain().lowerBound()[dim];
+      typename Point::Component up = image.domain().upperBound()[dim];
+      // Checks if the real coordinate point's floor or ceiling is inside the image
+      if( low <= floor(x[dim]) && floor(x[dim]) <= up )
       {
-	std::vector<bool> newSequence = sequence;
-	newSequence.push_back(true);
-	recursiveColor( val, div, x, r, l, image, start + 1, newSequence );
+	Point newPoint = localPoint;
+	newPoint[dim] = floor(x[dim]);
+	// Recursive call on next dimension, with updated local variables
+	recursiveColor( val, div, x, r, l, image, dim + 1, localDiv + l[dim], newPoint );
       }
-      if( low <= ceil(x[start]) && ceil(x[start]) <= up )
+      if( low <= ceil(x[dim]) && ceil(x[dim]) <= up )
       {
-	std::vector<bool> newSequence = sequence;
-	newSequence.push_back(false);
-	recursiveColor( val, div, x, r, l, image, start + 1, newSequence );
+	Point newPoint = localPoint;
+	newPoint[dim] = ceil(x[dim]);
+	// Recursive call on next dimension, with updated local variables
+	recursiveColor( val, div, x, r, l, image, dim + 1, localDiv + r[dim], newPoint );
       }
-      start++;
     }
   }
   else
   {
-    double localDiv = 1;
-    for( Dimension d = 0; d != dimension; d++ )
-    {
-      localDiv *= sequence[d] ? l[d] : r[d];
-    }
-    Point localPoint = Point::zero;
-    for( Dimension d = 0; d != dimension; d++ )
-    {
-      localPoint[d] = sequence[d] ? floor(x[d]) : ceil(x[d]);
-    }
     val += image(localPoint) * localDiv;
     div += localDiv;
   }
@@ -201,7 +195,6 @@ DGtal::NaiveQAT<TImageContainer>::calculate ( const Point & p ) const
     returnValue[d] /= myOmega;
   }
   return returnValue;
-  //return ( myM * p + myV ) / myOmega;
 }
 
 template<typename TImageContainer>
@@ -250,17 +243,11 @@ template<typename TImageContainer>
 void
 DGtal::NaiveQAT<TImageContainer>::inverse()
 {
-  Value det = myM.determinant();
+  myOmegaInv = myM.determinant();
+  assert( myOmegaInv != 0 && "M must be inversible");
   myMInv = ((myM.cofactor()).transpose() * myOmega);
   myVInv = (myM.cofactor()).transpose() * myV * -1;
-  myOmegaInv = det;
 }
-
-
-///////////////////////////////////////////////////////////////////////////////
-// Interface - public :
-
-
 
 
 
