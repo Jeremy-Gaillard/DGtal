@@ -131,7 +131,10 @@ namespace DGtal
      *
      * @return a range.
      */
-    ConstRange constRange() const;
+    ConstRange constRange() const
+    {
+      return myImage->constRange();
+    }
     
     /**
      * Get the value of the transformed image at a given 
