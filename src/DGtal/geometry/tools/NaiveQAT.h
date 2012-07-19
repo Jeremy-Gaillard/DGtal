@@ -42,6 +42,9 @@
 // Inclusions
 #include <iostream>
 #include "DGtal/base/Common.h"
+#include "DGtal/kernel/SimpleMatrix.h"
+#include "DGtal/kernel/sets/DigitalSetSelector.h"
+#include "DGtal/base/CowPtr.h"
 //////////////////////////////////////////////////////////////////////////////
 
 namespace DGtal
@@ -62,7 +65,7 @@ namespace DGtal
   template <typename TImageContainer>
   class NaiveQAT
   {
-    BOOST_CONCEPT_ASSERT(( CImage<TImageContainer> ));
+    //BOOST_CONCEPT_ASSERT(( CImage<TImageContainer> ));
 
 
     // ----------------------- Types ------------------------------
@@ -72,6 +75,18 @@ namespace DGtal
     typedef typename TImageContainer::Point Point;
     typedef typename TImageContainer::Value Value;
     typedef typename TImageContainer::ConstRange ConstRange;
+    typedef CowPtr<TImageContainer> ImagePointer;
+    
+    typedef typename Domain::Dimension Dimension;
+    
+    static const Dimension dimension = Domain::dimension;
+    
+    typedef SimpleMatrix<Value, dimension, dimension> Matrix;
+    typedef typename Matrix::ColumnVector Vector;	// Same as point
+    typedef typename DigitalSetSelector
+	< Domain, SMALL_DS+HIGH_ITER_DS >
+	::Type Paving;
+    
     
 
   private:
@@ -86,8 +101,8 @@ namespace DGtal
     /**
      * Constructor.
      */
-    NaiveQAT(/*M, omega, V*/);
-
+    NaiveQAT( const Matrix & M, const Value & omega, const Vector & V );
+    
     /**
      * Destructor. Does nothing.
      */
@@ -107,7 +122,7 @@ namespace DGtal
      */
     const Domain & domain() const
     {
-      return myDomain;
+      return myImage->domain();
     }
     
     /**
@@ -120,14 +135,26 @@ namespace DGtal
     
     /**
      * Get the value of the transformed image at a given 
-     * position given by a Point.
+     * position given by a point.
      *
      * @pre the point must be in the transformed image domain
      *
      * @param aPoint the point.
      * @return the value at aPoint.
      */
-    Value operator()( const Point & aPoint ) const;
+    Value operator()( const Point & aPoint ) const
+    {
+      return (*myImage)(aPoint);
+    }
+    
+    
+    /**
+     * Applies the QAT to an image. The result is stored in @a myImage.
+     * 
+     * @param image the image to be transformed
+     */
+    void transformImage( const ImageContainer & image );
+    
 
     
 
@@ -143,7 +170,21 @@ namespace DGtal
 
     // ------------------------- Protected Datas ------------------------------
   protected:
-    Domain myDomain;
+    Matrix myM;
+    Vector myV;
+    Value myOmega;
+    /**
+     * Inverted components
+     */
+    Matrix myMInv;
+    Vector myVInv;
+    Value myOmegaInv;
+    
+    ImagePointer myImage;
+    
+    std::vector<Paving> myPavings;
+    std::vector<Paving> myPavingsRemainder;
+    
     
     // ------------------------- Private Datas --------------------------------
   private:
@@ -152,7 +193,39 @@ namespace DGtal
     // ------------------------- Hidden services ------------------------------
   protected:
     NaiveQAT();
+    
+    /**
+      * computes the image of a point
+      *
+      * @param p the initial point
+      *
+      * @return the image of the point
+      */
+    const Point calculate ( const Point & p ) const;
+    
+    /**
+      * computes the minimum and maximum coordinates in the final image : min_x, min_y, max_x, max_y
+      *
+      * @param domain the initial image's domain
+      *
+      * @return the matrix : (min_i, min_j, max_i, max_j)
+      */
+    Domain getImageBound ( const Domain domain );
+    
+    Value backwardColorLinear( const Point & Pp, const ImageContainer & image);
+    
+    void recursiveColor( double & val, double & div, const std::vector<double> & x,
+			 const std::vector<double> & r, const std::vector<double> & l,
+			 const ImageContainer & image, int start, const std::vector<bool> & sequence ) const;
+    
+    void getAllVertices( std::vector<Point> & vertices, const Dimension & start, 
+		const Point & startPoint, const Point & endPoint ) const;
+		
+    void recursiveTransform( const Point & lowerBound, const Point & upperBound,
+			     Dimension dim, std::vector<typename Point::Component> & components,
+			     const std::vector<Point> & incr, Point & Pp, const ImageContainer & image );
 
+    void inverse();
 
   private:
 

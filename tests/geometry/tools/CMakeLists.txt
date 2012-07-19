@@ -1,5 +1,6 @@
 SET(DGTAL_TESTS_SRC
   testPreimage
+  testQAT
   )
 
 FOREACH(FILE ${DGTAL_TESTS_SRC})
