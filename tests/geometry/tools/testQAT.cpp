@@ -64,10 +64,10 @@ typedef ImageContainerBySTLVector<Z2i::Domain, int> Image;
 
 void testNearestNeighborQAT(const Image & image, const SimpleMatrix<int, 2, 2> & Mat, const int & omega, const Point & vect)
 {
-  BOOST_CONCEPT_ASSERT(( CConstImage<NearestNeighborQAT<Image> > ));
+  //BOOST_CONCEPT_ASSERT(( CConstImage<NearestNeighborQAT<Image> > ));
   
-  NearestNeighborQAT<Image> QAT( Mat, omega, vect);
-  QAT.transformImage(image);
+  NearestNeighborQAT<Image> QAT( Mat, omega, vect, 0 );
+  QAT.setImage(image);
   Domain newDomain = QAT.domain();
   
   Board2D board;
@@ -84,10 +84,17 @@ void testNearestNeighborQAT(const Image & image, const SimpleMatrix<int, 2, 2> &
   
   for ( typename Domain::Iterator it = newDomain.begin(); it != newDomain.end(); it++ )	
   {
+    int value = QAT(*it);
+    if( value == 0)
       board << CustomStyle( specificStyle,
-          new CustomColors( Color::Black,
-          cmap_grad( QAT(*it) ) ) )
-          << *it;
+	new CustomColors( Color::Black,
+	Color::Black ) )
+	<< *it;
+    else
+      board << CustomStyle( specificStyle,
+	  new CustomColors( Color::Black,
+	  cmap_grad( value ) ) )
+	  << *it;
   }
   
   board.saveEPS("testNNQAT.eps");
@@ -95,10 +102,10 @@ void testNearestNeighborQAT(const Image & image, const SimpleMatrix<int, 2, 2> &
 
 void testNaiveQAT(const Image & image, const SimpleMatrix<int, 2, 2> & Mat, const int & omega, const Point & vect)
 {
-  BOOST_CONCEPT_ASSERT(( CConstImage<NaiveQAT<Image> > ));
+  //BOOST_CONCEPT_ASSERT(( CConstImage<NaiveQAT<Image> > ));
   
-  NaiveQAT<Image> QAT( Mat, omega, vect);
-  QAT.transformImage(image);
+  NaiveQAT<Image> QAT( Mat, omega, vect, 0 );
+  QAT.setImage(image);
   Domain newDomain = QAT.domain();
   
   Board2D board;
@@ -115,10 +122,17 @@ void testNaiveQAT(const Image & image, const SimpleMatrix<int, 2, 2> & Mat, cons
   
   for ( typename Domain::Iterator it = newDomain.begin(); it != newDomain.end(); it++ )	
   {
+    int value = QAT(*it);
+    if( value == 0)
       board << CustomStyle( specificStyle,
-          new CustomColors( Color::Black,
-          cmap_grad( QAT(*it) ) ) )
-          << *it;
+	new CustomColors( Color::Black,
+	Color::Black ) )
+	<< *it;
+    else
+      board << CustomStyle( specificStyle,
+	  new CustomColors( Color::Black,
+	  cmap_grad( value ) ) )
+	  << *it;
   }
   
   board.saveEPS("testNaiveQAT.eps");
@@ -134,11 +148,11 @@ int main()
   
   
   Image image(domain);
-  image.setValue(Point(0,0), 1); image.setValue(Point(1,0), 1); image.setValue(Point(2,0), 2); image.setValue(Point(3,0), 1); image.setValue(Point(4,0), 1);
-  image.setValue(Point(0,1), 1); image.setValue(Point(1,1), 1); image.setValue(Point(2,1), 2); image.setValue(Point(3,1), 1); image.setValue(Point(4,1), 1);
-  image.setValue(Point(0,2), 4); image.setValue(Point(1,2), 1); image.setValue(Point(2,2), 2); image.setValue(Point(3,2), 1); image.setValue(Point(4,2), 1);
-  image.setValue(Point(0,3), 1); image.setValue(Point(1,3), 1); image.setValue(Point(2,3), 3); image.setValue(Point(3,3), 2); image.setValue(Point(4,3), 1);
-  image.setValue(Point(0,4), 1); image.setValue(Point(1,4), 1); image.setValue(Point(2,4), 4); image.setValue(Point(3,4), 1); image.setValue(Point(4,4), 3);
+  image.setValue(Point(0,0), 1); image.setValue(Point(1,0), 7); image.setValue(Point(2,0), 8); image.setValue(Point(3,0), 9); image.setValue(Point(4,0), 1);
+  image.setValue(Point(0,1), 13); image.setValue(Point(1,1), 1); image.setValue(Point(2,1), 2); image.setValue(Point(3,1), 1); image.setValue(Point(4,1), 11);
+  image.setValue(Point(0,2), 12); image.setValue(Point(1,2), 1); image.setValue(Point(2,2), 2); image.setValue(Point(3,2), 1); image.setValue(Point(4,2), 12);
+  image.setValue(Point(0,3), 11); image.setValue(Point(1,3), 1); image.setValue(Point(2,3), 3); image.setValue(Point(3,3), 2); image.setValue(Point(4,3), 13);
+  image.setValue(Point(0,4), 1); image.setValue(Point(1,4), 9); image.setValue(Point(2,4), 8); image.setValue(Point(3,4), 7); image.setValue(Point(4,4), 1);
 
   //Image image = MagickReader<Image>::importImage("inQAT.png");
   //Domain domain = image.domain();
@@ -149,7 +163,11 @@ int main()
   Mat.setComponent(0, 1, -2);
   Mat.setComponent(1, 0, 1);
   Mat.setComponent(1, 1, 4);
-  int omega = 1;
+//   Mat.setComponent(0, 0, 4);
+//   Mat.setComponent(0, 1, 1);
+//   Mat.setComponent(1, 0, 1);
+//   Mat.setComponent(1, 1, 1);
+  int omega = 2;
   Point vect(0, 0);
   
   testNaiveQAT(image, Mat, omega, vect);

@@ -75,7 +75,7 @@ namespace DGtal
     typedef typename TImageContainer::Point Point;
     typedef typename TImageContainer::Value Value;
     typedef typename TImageContainer::ConstRange ConstRange;
-    typedef CowPtr<TImageContainer> ImagePointer;
+    typedef CowPtr<const TImageContainer> ImagePointer;
     
     typedef typename DigitalSetSelector
 	< Domain, SMALL_DS+HIGH_ITER_DS >
@@ -107,9 +107,10 @@ namespace DGtal
      * 
      * @param omega
      * 
-     * @param V translation vector
+     * @param defaultValue the value affected to the points outside the 
+     * transformed image
      */
-    NearestNeighborQAT( const Matrix & M, const Value & omega, const Vector & V );
+    NearestNeighborQAT( const Matrix & M, const Value & omega, const Vector & V, const Value & defaultValue );
 
     /**
      * Destructor. Does nothing.
@@ -130,7 +131,7 @@ namespace DGtal
      */
     const Domain & domain() const
     {
-      return myImage->domain();
+      return myDomain;
     }
     
     /**
@@ -141,7 +142,7 @@ namespace DGtal
      */
     ConstRange constRange() const
     {
-      return myImage->constRange();
+      return myImage->constRange(); //TODO : fix
     }
     
     /**
@@ -153,17 +154,14 @@ namespace DGtal
      * @param aPoint the point.
      * @return the value at aPoint.
      */
-    Value operator()( const Point & aPoint ) const
-    {
-      return (*myImage)(aPoint);
-    }
+    Value operator()( const Point & aPoint ) const;
     
     /**
-     * Applies the QAT to an image. The result is stored in @a myImage.
+     * Chooses the image that will be transformed by the QAT.
      * 
      * @param image the image to be transformed
      */
-    void transformImage( const ImageContainer & image );
+    void setImage( const ImageContainer & image );
 
     
 
@@ -182,12 +180,19 @@ namespace DGtal
 
     // ------------------------- Protected Datas ------------------------------
   protected:
+    
+    const Value & myDefaultValue;
+    /**
+     * Transformed image domain
+     */
+    Domain myDomain;
+    
     /**
      * QAT parameters
      */
-    Matrix myM;
-    Vector myV;
-    Value myOmega;
+    const Matrix & myM;
+    const Vector & myV;
+    const Value & myOmega;
     /**
      * Inverted components
      */
@@ -199,6 +204,15 @@ namespace DGtal
      * Transformed image
      */
     ImagePointer myImage;
+    
+    /**
+     * First preceding point
+     */
+    Point FirstPp;
+    /**
+     * Increment
+     */
+    std::vector<Point> incr;
     
     // ------------------------- Private Datas --------------------------------
   private:
@@ -215,19 +229,15 @@ namespace DGtal
       *
       * @return the final image's domain
       */
-    Domain getImageBound ( const Domain domain );
+    Domain getImageBound ( const Domain domain ) const;
     
     /**
      * Finds all the vertices of a domain defined by two points
      */
     void getAllVertices( std::vector<Point> & vertices, const Dimension & start, 
 		const Point & startPoint, const Point & endPoint ) const;
-		
-    void recursiveTransform( const Point & lowerBound, const Point & upperBound,
-		  Dimension dim, std::vector<typename Point::Coordinate> & components,
-		  const std::vector<Point> & incr, Point & Pp, const ImageContainer & image );
     
-    Value backwardColorNN( const Point & Pp, const ImageContainer & image );
+    Value backwardColorNN( const Point & Pp, const ImageContainer & image ) const;
     
     /**
       * Computes the image of a point

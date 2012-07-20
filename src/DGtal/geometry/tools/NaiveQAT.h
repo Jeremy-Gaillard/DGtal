@@ -43,8 +43,9 @@
 #include <iostream>
 #include "DGtal/base/Common.h"
 #include "DGtal/kernel/SimpleMatrix.h"
-#include "DGtal/base/CowPtr.h"
+#include "DGtal/base/CountedPtr.h"
 #include "DGtal/images/CConstImage.h"
+#include <vector>
 //////////////////////////////////////////////////////////////////////////////
 
 namespace DGtal
@@ -74,7 +75,7 @@ namespace DGtal
     typedef typename TImageContainer::Point Point;
     typedef typename TImageContainer::Value Value;
     typedef typename TImageContainer::ConstRange ConstRange;
-    typedef CowPtr<TImageContainer> ImagePointer;
+    typedef CountedPtr<const TImageContainer> ImagePointer;
     
     typedef typename Domain::Dimension Dimension;
     
@@ -102,8 +103,11 @@ namespace DGtal
      * @param omega
      * 
      * @param V translation vector
+     * 
+     * @param defaultValue the value affected to the points outside the 
+     * transformed image
      */
-    NaiveQAT( const Matrix & M, const Value & omega, const Vector & V );
+    NaiveQAT( const Matrix & M, const Value & omega, const Vector & V, const Value & defaultValue );
     
     /**
      * Destructor. Does nothing.
@@ -124,7 +128,7 @@ namespace DGtal
      */
     const Domain & domain() const
     {
-      return myImage->domain();
+      return myDomain;
     }
     
     /**
@@ -135,7 +139,7 @@ namespace DGtal
      */
     ConstRange constRange() const
     {
-      return myImage->constRange();
+      return myImage->constRange(); // TODO : fix
     }
     
     /**
@@ -147,18 +151,15 @@ namespace DGtal
      * @param aPoint the point.
      * @return the value at aPoint.
      */
-    Value operator()( const Point & aPoint ) const
-    {
-      return (*myImage)(aPoint);
-    }
+    Value operator()( const Point & aPoint ) const;
     
     
     /**
-     * Applies the QAT to an image. The result is stored in @a myImage.
+     * Chooses the image that will be transformed by the QAT.
      * 
      * @param image the image to be transformed
      */
-    void transformImage( const ImageContainer & image );
+    void setImage( const ImageContainer & image );
     
 
     
@@ -172,18 +173,26 @@ namespace DGtal
      */
     void selfDisplay ( std::ostream & out ) const
     {
-      myImage->selfDisplay();
+      myImage->selfDisplay();// TODO : fix
     }
 
 
     // ------------------------- Protected Datas ------------------------------
   protected:
+    
+    
+    const Value & myDefaultValue;
+    /**
+     * Transformed image domain
+     */
+    Domain myDomain;
+    
     /**
      * QAT parameters
      */
-    Matrix myM;
-    Vector myV;
-    Value myOmega;
+    const Matrix & myM;
+    const Vector & myV;
+    const Value & myOmega;
     /**
      * Inverted components
      */
@@ -192,9 +201,18 @@ namespace DGtal
     Value myOmegaInv;
     
     /**
-     * Transformed image
+     * Image to transform
      */
     ImagePointer myImage;
+    
+    /**
+     * First preceding point
+     */
+    Point FirstPp;
+    /**
+     * Increment
+     */
+    std::vector<Point> incr;
     
     
     // ------------------------- Private Datas --------------------------------
@@ -221,9 +239,9 @@ namespace DGtal
       *
       * @return the final image's domain
       */
-    Domain getImageBound ( const Domain domain );
+    Domain getImageBound ( const Domain domain ) const;
     
-    Value backwardColorLinear( const Point & Pp, const ImageContainer & image );
+    Value backwardColorLinear( const Point & Pp, const ImageContainer & image ) const;
     
     void recursiveColor( double & val, double & div, const std::vector<double> & x,
 			 const std::vector<double> & r, const std::vector<double> & l,
@@ -235,9 +253,6 @@ namespace DGtal
     void getAllVertices( std::vector<Point> & vertices, const Dimension & start, 
 		const Point & startPoint, const Point & endPoint ) const;
 		
-    void recursiveTransform( const Point & lowerBound, const Point & upperBound,
-			     Dimension dim, std::vector<typename Point::Coordinate> & components,
-			     const std::vector<Point> & incr, Point & Pp, const ImageContainer & image );
 
     /**
      * Computes the inverse of the QAT
