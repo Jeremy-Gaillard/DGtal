@@ -223,20 +223,20 @@ namespace DGtal
       */
     Domain getImageBound ( const Domain domain );
     
-    Value backwardColorLinear( const Point & Pp, const ImageContainer & image);
+    Value backwardColorLinear( const Point & Pp, const ImageContainer & image );
     
     void recursiveColor( double & val, double & div, const std::vector<double> & x,
 			 const std::vector<double> & r, const std::vector<double> & l,
 			 const ImageContainer & image, int start, double localDiv, Point localPoint/*const std::vector<bool> & sequence*/ ) const;
     
     /**
-     * Finds all the vertices of @a myDomain
+     * Finds all the vertices of a domain defined by two points
      */
     void getAllVertices( std::vector<Point> & vertices, const Dimension & start, 
 		const Point & startPoint, const Point & endPoint ) const;
 		
     void recursiveTransform( const Point & lowerBound, const Point & upperBound,
-			     Dimension dim, std::vector<typename Point::Component> & components,
+			     Dimension dim, std::vector<typename Point::Coordinate> & components,
 			     const std::vector<Point> & incr, Point & Pp, const ImageContainer & image );
 
     /**

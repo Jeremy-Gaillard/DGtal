@@ -65,6 +65,32 @@ typedef ImageContainerBySTLVector<Z2i::Domain, int> Image;
 void testNearestNeighborQAT(const Image & image, const SimpleMatrix<int, 2, 2> & Mat, const int & omega, const Point & vect)
 {
   BOOST_CONCEPT_ASSERT(( CConstImage<NearestNeighborQAT<Image> > ));
+  
+  NearestNeighborQAT<Image> QAT( Mat, omega, vect);
+  QAT.transformImage(image);
+  Domain newDomain = QAT.domain();
+  
+  Board2D board;
+  board << SetMode( newDomain.className(), "Paving" )
+    << newDomain
+    << SetMode( newDomain.lowerBound().className(), "Paving" );
+  string specificStyle = newDomain.lowerBound().className() + "/Paving";
+  
+  GradientColorMap<int> cmap_grad( 1, 20 );
+  cmap_grad.addColor( Color( 50, 50, 255 ) );
+  cmap_grad.addColor( Color( 255, 0, 0 ) );
+  cmap_grad.addColor( Color( 255, 255, 10 ) );
+  
+  
+  for ( typename Domain::Iterator it = newDomain.begin(); it != newDomain.end(); it++ )	
+  {
+      board << CustomStyle( specificStyle,
+          new CustomColors( Color::Black,
+          cmap_grad( QAT(*it) ) ) )
+          << *it;
+  }
+  
+  board.saveEPS("testNNQAT.eps");
 }
 
 void testNaiveQAT(const Image & image, const SimpleMatrix<int, 2, 2> & Mat, const int & omega, const Point & vect)

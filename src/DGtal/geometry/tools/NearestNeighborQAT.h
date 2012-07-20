@@ -84,6 +84,11 @@ namespace DGtal
     typedef typename Domain::Dimension Dimension;
     
     static const Dimension dimension = Domain::dimension;
+	
+    typedef SimpleMatrix<Value, dimension, dimension> Matrix;
+    typedef typename Matrix::ColumnVector Vector;	// Same as point
+    
+    
     
 
   private:
@@ -109,7 +114,7 @@ namespace DGtal
     /**
      * Destructor. Does nothing.
      */
-    ~NearestNeighborQAT();
+    ~NearestNeighborQAT(){ }
 
     /**
      * Copy constructor.
@@ -148,7 +153,17 @@ namespace DGtal
      * @param aPoint the point.
      * @return the value at aPoint.
      */
-    Value operator()( const Point & aPoint ) const;
+    Value operator()( const Point & aPoint ) const
+    {
+      return (*myImage)(aPoint);
+    }
+    
+    /**
+     * Applies the QAT to an image. The result is stored in @a myImage.
+     * 
+     * @param image the image to be transformed
+     */
+    void transformImage( const ImageContainer & image );
 
     
 
@@ -192,6 +207,27 @@ namespace DGtal
     // ------------------------- Hidden services ------------------------------
   protected:
     NearestNeighborQAT();
+    
+    /**
+      * Computes the domain of the final image
+      *
+      * @param domain the initial image's domain
+      *
+      * @return the final image's domain
+      */
+    Domain getImageBound ( const Domain domain );
+    
+    /**
+     * Finds all the vertices of a domain defined by two points
+     */
+    void getAllVertices( std::vector<Point> & vertices, const Dimension & start, 
+		const Point & startPoint, const Point & endPoint ) const;
+		
+    void recursiveTransform( const Point & lowerBound, const Point & upperBound,
+		  Dimension dim, std::vector<typename Point::Coordinate> & components,
+		  const std::vector<Point> & incr, Point & Pp, const ImageContainer & image );
+    
+    Value backwardColorNN( const Point & Pp, const ImageContainer & image );
     
     /**
       * Computes the image of a point

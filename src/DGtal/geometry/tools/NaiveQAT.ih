@@ -73,7 +73,7 @@ DGtal::NaiveQAT<TImageContainer>::transformImage( const ImageContainer & image )
       vect[d+1] = - upperBound[d];
     incr.push_back(myMInv * vect);
   }
-  std::vector<typename Point::Component> components;
+  std::vector<typename Point::Coordinate> components;
   
   recursiveTransform( lowerBound, upperBound, (Dimension) 0, components, 
 		      incr, Pp, image );
@@ -88,12 +88,12 @@ template<typename TImageContainer>
 void
 DGtal::NaiveQAT<TImageContainer>::
 recursiveTransform( const Point & lowerBound, const Point & upperBound,
-  Dimension dim, std::vector<typename Point::Component> & components,
+  Dimension dim, std::vector<typename Point::Coordinate> & components,
   const std::vector<Point> & incr, Point & Pp, const ImageContainer & image )
 {
   if( dim == dimension )
   {
-    typename Point::Component comp [dim];
+    typename Point::Coordinate comp [dim];
     for( Dimension i = 0; i != dim; i++ )
     {
       comp[i] = components[i];
@@ -103,15 +103,15 @@ recursiveTransform( const Point & lowerBound, const Point & upperBound,
   }
   else
   {
-    for( typename Point::Component c = lowerBound[dim]; c != upperBound[dim]; c++ )
+    for( typename Point::Coordinate c = lowerBound[dim]; c != upperBound[dim]; c++ )
     {
-      std::vector<typename Point::Component> localComponents = components;
+      std::vector<typename Point::Coordinate> localComponents = components;
       localComponents.push_back(c);
       recursiveTransform( lowerBound, upperBound, dim+1, localComponents, incr, Pp, image );
       Pp += incr[dim];
     }
     // Processing of the last component : no incrementation of Pp must be done (incrementing in another dimension)
-    std::vector<typename Point::Component> localComponents = components;
+    std::vector<typename Point::Coordinate> localComponents = components;
     localComponents.push_back(upperBound[dim]);
     recursiveTransform( lowerBound, upperBound, dim+1, localComponents, incr, Pp, image );
   }
@@ -156,8 +156,8 @@ DGtal::NaiveQAT<TImageContainer>::recursiveColor( double & val, double & div, co
   if( dim != dimension )
   {
     {
-      typename Point::Component low = image.domain().lowerBound()[dim];
-      typename Point::Component up = image.domain().upperBound()[dim];
+      typename Point::Coordinate low = image.domain().lowerBound()[dim];
+      typename Point::Coordinate up = image.domain().upperBound()[dim];
       // Checks if the real coordinate point's floor or ceiling is inside the image
       if( low <= floor(x[dim]) && floor(x[dim]) <= up )
       {

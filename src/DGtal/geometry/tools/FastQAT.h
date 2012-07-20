@@ -84,6 +84,11 @@ namespace DGtal
     typedef typename Domain::Dimension Dimension;
     
     static const Dimension dimension = Domain::dimension;
+
+    typedef SimpleMatrix<Value, dimension, dimension> Matrix;
+    typedef typename Matrix::ColumnVector Vector;	// Same as point
+    
+    
   private:
 
     

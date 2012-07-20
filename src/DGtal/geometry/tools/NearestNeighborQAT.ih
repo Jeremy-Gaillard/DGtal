@@ -15,13 +15,13 @@
  **/
 
 /**
- * @file NaiveQAT.ih
+ * @file NearestNeighborQAT.ih
  * @author Jérémy Gaillard (\c jeremy.gaillard@insa-lyon.fr )
  * Institut National des Sciences Appliquées - INSA, France
  *
  * @date 2012/07/10
  *
- * @brief Implementation of inline methods defined in NaiveQAT.h
+ * @brief Implementation of inline methods defined in NearestNeighborQAT.h
  *
  * This file is part of the DGtal library.
  */
@@ -29,6 +29,7 @@
 
 //////////////////////////////////////////////////////////////////////////////
 #include <cstdlib>
+#include <math.h>
 //////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -39,7 +40,7 @@
 // ----------------------- Standard services ------------------------------
 
 template<typename TImageContainer>
-DGtal::NearestNeighborQAT::
+DGtal::NearestNeighborQAT<TImageContainer>::
 NearestNeighborQAT( const Matrix & M, const Value & omega, const Vector & V )
 {
   myM = M;
@@ -48,12 +49,94 @@ NearestNeighborQAT( const Matrix & M, const Value & omega, const Vector & V )
   inverse();
 }
 
+template<typename TImageContainer>
+void
+DGtal::NearestNeighborQAT<TImageContainer>::transformImage( const ImageContainer & image )
+{
+  Domain transformedDomain = getImageBound( image.domain() );
+  myImage = ImagePointer(new TImageContainer(transformedDomain));
+  
+  Point lowerBound = transformedDomain.lowerBound();
+  Point upperBound = transformedDomain.upperBound();
+  // Antecedent point, initialized as the antecedent point of the lower bound
+  Point Pp = myMInv * lowerBound + myVInv;
+  // Incrementation in each dimension for each step performed
+  std::vector<Point> incr;
+  for( Dimension d = 0; d != dimension; d++ )
+  {
+    Point vect = Point::zero;
+    vect[d] = 1;
+    if( d != dimension - 1 )
+      vect[d+1] = - upperBound[d];
+    incr.push_back(myMInv * vect);
+  }
+  std::vector<typename Point::Coordinate> components;
+  
+  recursiveTransform( lowerBound, upperBound, (Dimension) 0, components, 
+		      incr, Pp, image );
+}
+
+template<typename TImageContainer>
+void
+DGtal::NearestNeighborQAT<TImageContainer>::
+recursiveTransform( const Point & lowerBound, const Point & upperBound,
+  Dimension dim, std::vector<typename Point::Coordinate> & components,
+  const std::vector<Point> & incr, Point & Pp, const ImageContainer & image )
+{
+  if( dim == dimension )
+  {
+    typename Point::Coordinate comp [dim];
+    for( Dimension i = 0; i != dim; i++ )
+    {
+      comp[i] = components[i];
+    }
+    Point p(comp);
+    myImage->setValue(p, backwardColorNN( Pp, image ));
+  }
+  else
+  {
+    for( typename Point::Coordinate c = lowerBound[dim]; c != upperBound[dim]; c++ )
+    {
+      std::vector<typename Point::Coordinate> localComponents = components;
+      localComponents.push_back(c);
+      recursiveTransform( lowerBound, upperBound, dim+1, localComponents, incr, Pp, image );
+      Pp += incr[dim];
+    }
+    // Processing of the last component : no incrementation of Pp must be done (incrementing in another dimension)
+    std::vector<typename Point::Coordinate> localComponents = components;
+    localComponents.push_back(upperBound[dim]);
+    recursiveTransform( lowerBound, upperBound, dim+1, localComponents, incr, Pp, image );
+  }
+}
+
+template<typename TImageContainer>
+typename DGtal::NearestNeighborQAT<TImageContainer>::Value
+DGtal::NearestNeighborQAT<TImageContainer>::
+backwardColorNN( const Point & Pp, const ImageContainer & image )
+{
+  typename Point::Coordinate rx [dimension];
+  
+  for( Dimension d = 0; d < dimension; d++ )
+  {
+    // the real coordinates of the point
+    double x = (double) Pp[d] / myOmegaInv;
+    typename Point::Coordinate roundedX = rint( x );
+    if( roundedX < image.domain().lowerBound()[d] )
+      roundedX = image.domain().lowerBound()[d];
+    if( roundedX > image.domain().upperBound()[d] )
+      roundedX = image.domain().upperBound()[d];
+    rx[d] = roundedX;
+  }
+  
+  return image( Point(rx) );
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // ----------------------- Hidden services ------------------------------
 
 template<typename TImageContainer>
 const
-typename DGtal::NaiveQAT<TImageContainer>::Point
+typename DGtal::NearestNeighborQAT<TImageContainer>::Point
 DGtal::NearestNeighborQAT<TImageContainer>::calculate ( const Point & p ) const
 {
   Point returnValue = myM * p + myV;
@@ -72,6 +155,48 @@ DGtal::NearestNeighborQAT<TImageContainer>::inverse()
   assert( myOmegaInv != 0 && "M must be inversible");
   myMInv = ((myM.cofactor()).transpose() * myOmega);
   myVInv = (myM.cofactor()).transpose() * myV * -1;
+}
+
+template<typename TImageContainer>
+typename DGtal::NearestNeighborQAT<TImageContainer>::Domain
+DGtal::NearestNeighborQAT<TImageContainer>::getImageBound ( const Domain domain )
+{
+  Point newLower;
+  Point newUpper;
+  
+  Point lowerBound = domain.lowerBound();
+  Point upperBound = domain.upperBound();
+  std::vector<Point> vertices;
+  getAllVertices(vertices, 0, lowerBound, upperBound);
+  typename std::vector<Point>::const_iterator it = vertices.begin();
+  typename std::vector<Point>::const_iterator ite = vertices.end();
+  newLower = newUpper = calculate(*it);
+  it++;
+  for( ; it != ite; it++ )
+  {
+    Point transformedPoint = calculate(*it);
+    for( Dimension d = 0; d < dimension; d++ )
+    {
+      newLower[d] = std::min( transformedPoint[d], newLower[d] );
+      newUpper[d] = std::max( transformedPoint[d], newUpper[d] );
+    }
+  }
+  return Domain(newLower, newUpper);
+}
+
+template<typename TImageContainer>
+void
+DGtal::NearestNeighborQAT<TImageContainer>::
+getAllVertices( std::vector<Point> & vertices, const Dimension & start, 
+		const Point & startPoint, const Point & endPoint ) const
+{
+  vertices.push_back(startPoint);
+  for( Dimension d = start; d != dimension; d++ )
+  {
+    Point nextPoint = startPoint;
+    nextPoint[d] = endPoint[d];
+    getAllVertices(vertices, d+1, nextPoint, endPoint);
+  }
 }
 
 //                                                                           //
