@@ -45,6 +45,7 @@
 #include "DGtal/kernel/SimpleMatrix.h"
 #include "DGtal/base/CountedPtr.h"
 #include "DGtal/images/CConstImage.h"
+#include "DGtal/base/ConstRangeAdapter.h"
 #include <vector>
 //////////////////////////////////////////////////////////////////////////////
 
@@ -70,11 +71,11 @@ namespace DGtal
 
     // ----------------------- Types ------------------------------
   public:
+    typedef NaiveQAT<TImageContainer> Self;
     typedef TImageContainer ImageContainer;
     typedef typename TImageContainer::Domain Domain;
     typedef typename TImageContainer::Point Point;
     typedef typename TImageContainer::Value Value;
-    typedef typename TImageContainer::ConstRange ConstRange;
     typedef CountedPtr<const TImageContainer> ImagePointer;
     
     typedef typename Domain::Dimension Dimension;
@@ -84,6 +85,24 @@ namespace DGtal
     typedef SimpleMatrix<Value, dimension, dimension> Matrix;
     typedef typename Matrix::ColumnVector Vector;	// Same as point
     
+    class valueFunctor
+    {
+    public:
+      valueFunctor(const Self & aImage) : image(aImage)
+      { }
+      valueFunctor operator=(valueFunctor & other) 
+      { 
+	image(other.image);
+      }
+      Value operator()(Point p) const
+      {
+	return image(p);
+      }
+    private:
+      const Self & image;
+    };
+    
+    typedef ConstRangeAdapter< typename Domain::ConstIterator, valueFunctor, Value > ConstRange;
     
 
   private:
@@ -139,7 +158,7 @@ namespace DGtal
      */
     ConstRange constRange() const
     {
-      return myImage->constRange(); // TODO : fix
+      return ConstRange( myDomain.begin(), myDomain.end(), valueFunctor(*this) );
     }
     
     /**
@@ -181,7 +200,7 @@ namespace DGtal
   protected:
     
     
-    const Value & myDefaultValue;
+    Value myDefaultValue;
     /**
      * Transformed image domain
      */
@@ -190,9 +209,9 @@ namespace DGtal
     /**
      * QAT parameters
      */
-    const Matrix & myM;
-    const Vector & myV;
-    const Value & myOmega;
+    Matrix myM;
+    Vector myV;
+    Value myOmega;
     /**
      * Inverted components
      */

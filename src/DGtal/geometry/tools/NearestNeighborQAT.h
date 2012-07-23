@@ -46,6 +46,8 @@
 #include "DGtal/kernel/SimpleMatrix.h"
 #include "DGtal/base/CowPtr.h"
 #include "DGtal/images/CConstImage.h"
+#include "DGtal/base/ConstRangeAdapter.h"
+#include <vector>
 //////////////////////////////////////////////////////////////////////////////
 
 namespace DGtal
@@ -70,12 +72,31 @@ namespace DGtal
 
     // ----------------------- Types ------------------------------
   public:
+    typedef NearestNeighborQAT<TImageContainer> Self;
     typedef TImageContainer ImageContainer;
     typedef typename TImageContainer::Domain Domain;
     typedef typename TImageContainer::Point Point;
     typedef typename TImageContainer::Value Value;
-    typedef typename TImageContainer::ConstRange ConstRange;
     typedef CowPtr<const TImageContainer> ImagePointer;
+    
+    class valueFunctor
+    {
+    public:
+      valueFunctor(const Self & aImage) : image(aImage)
+      { }
+      valueFunctor operator=(valueFunctor & other) 
+      { 
+	image(other.image);
+      }
+      Value operator()(Point p) const
+      {
+	return image(p);
+      }
+    private:
+      const Self & image;
+    };
+    
+    typedef ConstRangeAdapter< typename Domain::ConstIterator, valueFunctor, Value > ConstRange;
     
     typedef typename DigitalSetSelector
 	< Domain, SMALL_DS+HIGH_ITER_DS >
@@ -142,7 +163,7 @@ namespace DGtal
      */
     ConstRange constRange() const
     {
-      return myImage->constRange(); //TODO : fix
+      return ConstRange( myDomain.begin(), myDomain.end(), valueFunctor(*this) );
     }
     
     /**
@@ -181,7 +202,7 @@ namespace DGtal
     // ------------------------- Protected Datas ------------------------------
   protected:
     
-    const Value & myDefaultValue;
+    Value myDefaultValue;
     /**
      * Transformed image domain
      */
@@ -190,9 +211,9 @@ namespace DGtal
     /**
      * QAT parameters
      */
-    const Matrix & myM;
-    const Vector & myV;
-    const Value & myOmega;
+    Matrix myM;
+    Vector myV;
+    Value myOmega;
     /**
      * Inverted components
      */

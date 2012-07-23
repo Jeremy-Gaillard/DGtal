@@ -81,6 +81,13 @@ void testNearestNeighborQAT(const Image & image, const SimpleMatrix<int, 2, 2> &
   cmap_grad.addColor( Color( 255, 0, 0 ) );
   cmap_grad.addColor( Color( 255, 255, 10 ) );
   
+  typename NearestNeighborQAT<Image>::ConstRange::ConstIterator ite = QAT.constRange().end();
+  for ( typename NearestNeighborQAT<Image>::ConstRange::ConstIterator it = QAT.constRange().begin();
+       it != ite; it++ )
+  {
+    cout << *it << " ";
+  }
+  cout << endl;
   
   for ( typename Domain::Iterator it = newDomain.begin(); it != newDomain.end(); it++ )	
   {
@@ -119,6 +126,13 @@ void testNaiveQAT(const Image & image, const SimpleMatrix<int, 2, 2> & Mat, cons
   cmap_grad.addColor( Color( 255, 0, 0 ) );
   cmap_grad.addColor( Color( 255, 255, 10 ) );
   
+  typename NaiveQAT<Image>::ConstRange::ConstIterator ite = QAT.constRange().end();
+  for ( typename NaiveQAT<Image>::ConstRange::ConstIterator it = QAT.constRange().begin();
+       it != ite; it++ )
+  {
+    cout << *it << " ";
+  }
+  cout << endl;
   
   for ( typename Domain::Iterator it = newDomain.begin(); it != newDomain.end(); it++ )	
   {
