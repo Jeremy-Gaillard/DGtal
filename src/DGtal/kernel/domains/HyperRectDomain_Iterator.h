@@ -165,7 +165,8 @@ namespace DGtal
     typedef TPoint& reference;
     typedef typename TPoint::Dimension Dimension;
 
-
+    HyperRectDomain_Iterator() {}
+    
     HyperRectDomain_Iterator( const TPoint & p, const TPoint& lower, const TPoint &upper )
       : myPoint( p ), mylower( lower ), myupper( upper ),  myCurrentPos( 0 )
     {

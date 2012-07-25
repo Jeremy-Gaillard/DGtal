@@ -151,6 +151,7 @@ DGtal::NearestNeighborQAT<TImageContainer>::getImageBound ( const Domain domain 
       newUpper[d] = std::max( transformedPoint[d], newUpper[d] );
     }
   }
+  cout << newLower << " " << newUpper << endl;
   return Domain(newLower, newUpper);
 }
 

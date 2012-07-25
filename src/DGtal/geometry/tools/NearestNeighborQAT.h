@@ -67,7 +67,7 @@ namespace DGtal
   template <typename TImageContainer>
   class NearestNeighborQAT
   {
-    BOOST_CONCEPT_ASSERT(( CConstImage<TImageContainer> ));
+    //BOOST_CONCEPT_ASSERT(( CConstImage<TImageContainer> ));
 
 
     // ----------------------- Types ------------------------------
@@ -142,7 +142,20 @@ namespace DGtal
      * Copy constructor.
      * @param other the object to clone.
      */
-    NearestNeighborQAT( const NearestNeighborQAT & other );
+    NearestNeighborQAT( const NearestNeighborQAT & other )
+    {
+      myM = other.myM;
+      myV = other.myV;
+      myDefaultValue = other.myDefaultValue;
+      myImage = other.myImage;
+      myOmega = other.myOmega;
+      myDomain = other.myDomain;
+      myMInv = other.myMInv;
+      myVInv = other.myVInv;
+      myOmegaInv = other.myOmegaInv;
+      FirstPp = other.FirstPp;
+      incr = other.incr;
+    }
     
     
     /**

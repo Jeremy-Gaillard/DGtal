@@ -1,3 +1,62 @@
+// TODO : change method place
+
+/** 
+ * computes v0 and v1 such as v0 * a + v1 * b = gcd(a, b)
+ * 
+ * @param a the first integer
+ * @param b the second integer
+ * 
+ * @return the vector (v0, v1)
+ */
+std::pair<int, int> extendedEuclidean(int a, int b)	//TODO : change int
+{
+  std::pair<int, int> v;	//TODO : same
+
+  if(b == 0)
+    {
+      v.first = a < 0? -1: 1;
+      v.second = 0;
+    }
+  else
+    {
+      std::pair<int, int> vt = extendedEuclidean(b, a % b);
+      v.first = vt.second;
+      v.second = vt.first - a / b * vt.second;
+    }
+  return v;
+}
+
+/** 
+ * quotient of the Euclidean division of 2 integers with positive remain
+ * 
+ * @param a first integer
+ * @param b second integer
+ * 
+ * @return 
+ */
+int intDiv( int a, int b )
+{
+  int q = a / b;
+  if(a - b * q < 0)
+    return q - 1;
+  return q;
+}
+
+/** 
+ * remain of the Euclidean division of 2 integers with positive remain
+ * 
+ * @param a first integer
+ * @param b second integer
+ * 
+ * @return 
+ */
+int mod( int a, int b )
+{
+  return a - b * intDiv( a, b ) ;
+}
+
+
+
 /**
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Lesser General Public License as
@@ -21,7 +80,7 @@
  *
  * @date 2012/07/10
  *
- * @brief Implementation of inline methods defined in NaiveQAT.h
+ * @brief Implementation of inline methods defined in FastQAT.h
  *
  * This file is part of the DGtal library.
  */
@@ -29,21 +88,320 @@
 
 //////////////////////////////////////////////////////////////////////////////
 #include <cstdlib>
+#include <boost/math/common_factor_rt.hpp>
 //////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////
 // IMPLEMENTATION of inline methods.
 ///////////////////////////////////////////////////////////////////////////////
-
+#include "FastQAT.h"
 ///////////////////////////////////////////////////////////////////////////////
 // ----------------------- Standard services ------------------------------
 
+template <typename TImageContainer>
+DGtal::FastQAT<TImageContainer, 2>::
+FastQAT( const Matrix & M, const Value & omega, const Vector & V, const Value & defaultValue )
+: myM(M), myOmega(omega), myV(V), myDefaultValue(defaultValue)
+{
+  assert( TImageContainer::Domain::dimension == 2 );
+  isContracting = myOmega * myOmega > myM.determinant();
+  cout << "Contracting ? " << isContracting << endl;
+  if( isContracting )
+  {
+    myMInv = myM;
+    myVInv = myV;
+    myOmegaInv = myOmega;
+  }
+  else
+  {
+    myMInv = myM;
+    myVInv = myV;
+    myOmegaInv = myOmega;
+    //inverse();
+  }
+  compute();
+}
 
+template <typename TImageContainer>
+void
+DGtal::FastQAT<TImageContainer, 2>::
+setImage( const ImageContainer & image )
+{
+  myImage = ImagePointer(new ImageContainer(image));
+  myDomain = getImageBound( image.domain() );
+  
+  pavings = std::vector<Paving> ( alpha1 * alpha0, Paving(image.domain()) );
+  pavingsRemainder = std::vector<Paving> ( alpha1 * alpha0, Paving(image.domain()) );
+  
+  determinePavingsWithRemainders();
+}
+
+template <typename TImageContainer>
+typename DGtal::FastQAT<TImageContainer, 2>::Value 
+DGtal::FastQAT<TImageContainer, 2>::operator()( const Point & aPoint ) const
+{
+  typedef typename Point::Coordinate Coordinate;
+  
+  Paving P = Paving(myImage->domain());
+  Paving rP = Paving(myImage->domain());
+  Value i0, v0, j0, v1;
+  Point v;
+  
+  Point lowerBound = myDomain.lowerBound();
+  
+  j0 = mod ( aPoint[1], alpha1 );
+  v1 = intDiv ( aPoint[1], alpha1 );
+  i0 = mod ( aPoint[0] + v1 * beta1, alpha0 );
+  v0 = intDiv ( aPoint[0] + v1 * beta1, alpha0 );
+    
+  v = U0 * v0 + U1 * v1;
+  // v is the image of aPoint by the QAT
+  
+  
+  if ( 0 <= i0 && i0 < alpha0 && 0 <= j0 && j0 < alpha1 )
+    P = pavings[j0 * alpha0 + i0];
+  if ( 0 <= i0 && i0 < alpha0 && 0 <= j0 && j0 < alpha1 )
+    rP = pavingsRemainder[j0 * alpha0 + i0];
+  if( isContracting )
+  {
+    return pavingValue( P, v );
+  }
+  else
+  {
+    typename Paving::ConstIterator ite = rP.end();
+    cout << "start ";
+    for ( typename Paving::ConstIterator it = rP.begin(); it != ite; it++ )
+    {
+      Point P2 = v + *it;
+      cout << *it << " ; ";
+      if ( myImage->domain().isInside( P2 ) && (*myImage)( P2 ) != 0 )
+        return (*myImage)( P2 );
+    }
+    cout << endl;
+    return 0;
+    /*
+    Point P2 = v - myDomain.lowerBound();
+    if ( myImage->domain().isInside( P2 ) )
+    {
+      cout << "SUP BRO" << endl;
+      return (*myImage)( P2 );
+    }
+    else
+    {
+      cout << "Fail :(" << endl;
+      return 0;
+    }*/
+  }
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // ----------------------- Hidden services ------------------------------
 
+template<typename TImageContainer>
+typename DGtal::FastQAT<TImageContainer, 2>::Domain
+DGtal::FastQAT<TImageContainer, 2>::getImageBound ( const Domain domain ) const
+{
+  Point lowerBound = domain.lowerBound();
+  Point upperBound = domain.upperBound();
+  
+  Point p0, p1, p2, p3;
+  p0 = calculate( lowerBound );
+  p1 = calculate( Point( lowerBound[0], upperBound[1] ) );
+  p2 = calculate( Point( upperBound[0], lowerBound[1] ) );
+  p3 = calculate( upperBound );
+  Point newLower( std::min( p0[0], std::min( p1[0], std::min( p2[0], p3[0] ) ) ),
+		  std::min( p0[1], std::min( p1[1], std::min( p2[1], p3[1] ) ) ) );
+  Point newUpper( std::max( p0[0], std::max( p1[0], std::max( p2[0], p3[0] ) ) ), 
+		  std::max( p0[1], std::max( p1[1], std::max( p2[1], p3[1] ) ) ) );
+  cout << "Bounds : " << newLower << " " << newUpper << endl;
+  return Domain( newLower, newUpper );
+}
 
+template<typename TImageContainer>
+typename DGtal::FastQAT<TImageContainer, 2>::Value 
+DGtal::FastQAT<TImageContainer, 2>::pavingValue( const Paving & P, const Point & v ) const
+{
+  int count = 0;
+  Value val = 0;
+  typename Paving::ConstIterator ite = P.end();
+  for ( typename Paving::ConstIterator it = P.begin(); it != ite; it++ )
+  {
+    Point P2 = *it + v;
+    if ( myImage->domain().isInside( P2 ) )
+    {
+      val += (*myImage)( P2 );
+      count++;
+    }
+  }
+  if ( count )
+    val /= count;
+  return val;
+}
+
+template<typename TImageContainer>
+void 
+DGtal::FastQAT<TImageContainer, 2>::determinePavingsWithRemainders()
+{
+  int A = -intDiv ( f0, d1 );
+  for ( int y = A; y < A + myOmegaInv * alpha1 / d1; y++ )
+    {
+      int C = -intDiv ( e0 + b1 * y, a1 );
+      for ( int x = C; x < C + myOmegaInv * alpha0 / a1; x++ )
+        {
+          Point X = H * Point ( x, y );
+          Point I = calculateInv ( X );
+          Point rem = calculateRemainderInv ( X );
+
+          setPavingRemainder ( I, rem, X );
+        }
+    }
+}
+
+template<typename TImageContainer>
+void 
+DGtal::FastQAT<TImageContainer, 2>::setPavingRemainder ( const Point I, const Point Rem, const Point P )
+{
+  if ( 0 <= I[0] && I[0] < alpha0 && 0 <= I[1] && I[1] < alpha1 )
+  {
+    cout << "Paving n°" << I[1] * alpha0 + I[0] << " : " << P << endl;
+    pavings[I[1] * alpha0 + I[0]].insertNew( P );
+    pavingsRemainder[I[1] * alpha0 + I[0]].insertNew( Rem );
+  }
+}
+
+template<typename TImageContainer>
+const
+typename DGtal::FastQAT<TImageContainer, 2>::Point
+DGtal::FastQAT<TImageContainer, 2>::calculate ( const Point & p ) const
+{
+  Point returnValue = myM * p + myV;
+  for( Dimension d = 0; d != dimension; d++ )
+  {
+    returnValue[d] /= myOmega;
+  }
+  return returnValue;
+}
+
+template<typename TImageContainer>
+const
+typename DGtal::FastQAT<TImageContainer, 2>::Point
+DGtal::FastQAT<TImageContainer, 2>::calculateInv ( const Point & p ) const
+{
+  Point returnValue = myMInv * p + myVInv;
+  for( Dimension d = 0; d != dimension; d++ )
+  {
+    returnValue[d] /= myOmegaInv;
+  }
+  return returnValue;
+}
+
+template<typename TImageContainer>
+const 
+typename DGtal::FastQAT<TImageContainer, 2>::Point 
+DGtal::FastQAT<TImageContainer, 2>::calculateRemainderInv ( const Point p ) const
+{
+  Point returnValue = myMInv * p + myVInv;
+  for( Dimension d = 0; d != dimension; d++ )
+  {
+    returnValue[d] %= myOmegaInv;
+  }
+  return returnValue;
+}
+
+template<typename TImageContainer>
+void
+DGtal::FastQAT<TImageContainer, 2>::inverse()
+{
+  myOmegaInv = myM.determinant();
+  assert( myOmegaInv != 0 && "M must be inversible");
+  myMInv = ((myM.cofactor()).transpose() * myOmega);
+  myVInv = (myM.cofactor()).transpose() * myV * -1;
+}
+
+template<typename TImageContainer>
+void
+DGtal::FastQAT<TImageContainer, 2>::compute()
+{
+  boost::math::gcd_evaluator<Value> gcd;
+  
+  int cp0, dp0, u0, v0;
+  std::pair<Value, Value> v;
+
+  a0 = myMInv(0,0);
+  //b0 = myMInv(1,0);
+  //c0 = myMInv(0,1);
+  b0 = myMInv(0,1);
+  c0 = myMInv(1,0);
+  d0 = myMInv(1,1);
+  e0 = myVInv[0];
+  f0 = myVInv[1];
+
+  if ( c0 != 0 )
+    {
+      v = extendedEuclidean( c0, d0 );
+      cp0 = c0 / gcd( c0, d0 );
+      dp0 = d0 / gcd( c0, d0 );
+      u0 = v.first;
+      v0 = v.second;
+
+      a1 = a0 * dp0 - b0 * cp0;
+      b1 = a0 * u0 + b0 * v0;
+      c1 = 0;
+      d1 = c0 * u0 + d0 * v0;
+    }
+  else
+    {
+      cp0 = 0;
+      dp0 = 1;
+      u0 = 0;
+      v0 = 1;
+
+      a1 = a0;
+      b1 = b0;
+      c1 = c0;
+      d1 = d0;
+    }
+
+  H.setComponent(0,0,dp0);
+//   H.setComponent(1,0,u0);
+//   H.setComponent(0,1,-cp0);
+  H.setComponent(0,1,u0);
+  H.setComponent(1,0,-cp0);
+  H.setComponent(1,1,v0);
+
+  if ( a1 < 0 )
+    {
+      Matrix mult;
+      mult.setComponent(0,0,-1);
+      mult.setComponent(1,0,0);
+      mult.setComponent(0,1,0);
+      mult.setComponent(1,1,1);
+      a1 = -a1;
+      H = H * mult;
+    }
+
+  b10 = intDiv ( b1, a1 );
+  b11 = mod ( b1, a1 );
+
+  H0.column(0) = H.column(0) * b10;
+
+  alpha0 = a1 / gcd( a1, myOmegaInv );
+  U0 = H * Vector ( myOmegaInv / gcd( a1, myOmegaInv ), 0 );
+
+  {
+    int d1p = d1 / gcd( d1, myOmegaInv );
+    int omegap = myOmegaInv / gcd( d1, myOmegaInv );
+    int a1p = a1 / gcd( gcd( a1, myOmegaInv ), b1 * omegap );
+    int phi = b1 * omegap / gcd( gcd( a1, myOmegaInv ), b1 * omegap );
+    int omegas = myOmegaInv / gcd( gcd( a1, myOmegaInv ), b1 * omegap );
+    std::pair<Value, Value> vect = extendedEuclidean( a1p, omegas );
+    int u1 = vect.first;
+    int v1 = vect.second;
+    alpha1 = d1p * gcd( a1p, omegas );
+    beta1 = -phi * v1;
+    U1 = H * Vector ( -phi * u1, omegap * gcd( a1p, omegas ) );
+  }
+}
 
 
 

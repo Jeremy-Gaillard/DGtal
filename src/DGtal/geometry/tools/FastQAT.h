@@ -62,10 +62,20 @@ namespace DGtal
    *
    * @tparam TImageContainer any model of CConstImage
    */
-  template <typename TImageContainer>
+  template<typename TImageContainer, Dimension d = TImageContainer::Domain::dimension>
   class FastQAT
   {
-    BOOST_CONCEPT_ASSERT(( CConstImage<TImageContainer> ));
+    FastQAT()
+    {
+      assert( false );
+    }
+  };
+  
+  
+  template <typename TImageContainer>
+  class FastQAT<TImageContainer, 2>
+  {
+    //BOOST_CONCEPT_ASSERT(( CConstImage<TImageContainer> ));
 
 
     // ----------------------- Types ------------------------------
@@ -106,20 +116,44 @@ namespace DGtal
      * @param omega
      * 
      * @param V translation vector
+     * 
+     * @param defaultValue the value affected to the points outside the 
+     * transformed image
      */
-    FastQAT( const Matrix & M, const Value & omega, const Vector & V );
+    FastQAT( const Matrix & M, const Value & omega, const Vector & V, const Value & defaultValue );
 
     /**
      * Destructor. Does nothing.
      */
-    ~FastQAT();
+    ~FastQAT() { };
 
     /**
      * Copy constructor.
      * @param other the object to clone.
      */
-    FastQAT( const FastQAT & other );
+    FastQAT( const FastQAT & other )
+    { 
+      myM = other.myM;
+      myV = other.myV;
+      myDefaultValue = other.myDefaultValue;
+      myImage = other.myImage;
+      myOmega = other.myOmega;
+      myDomain = other.myDomain;
+      isContracting = other.isContracting;
+      pavings = other.pavings;
+      pavingsRemainder = other.pavingsRemainder;
+      myMInv = other.myMInv;
+      myVInv = other.myVInv;
+      myOmegaInv = other.myOmegaInv;
+      compute();	// TODO : replace by a0=other.a0 ...
+    }
     
+    /**
+     * Chooses the image that will be transformed by the QAT.
+     * 
+     * @param image the image to be transformed
+     */
+    void setImage( const ImageContainer & image );
     
     /**
      * Returns a reference to the transformed image domain.
@@ -128,7 +162,7 @@ namespace DGtal
      */
     const Domain & domain() const
     {
-      return myImage->domain();
+      return myDomain;
     }
     
     /**
@@ -170,6 +204,15 @@ namespace DGtal
 
     // ------------------------- Protected Datas ------------------------------
   protected:
+    
+    Value myDefaultValue;
+    /**
+     * Transformed image domain
+     */
+    Domain myDomain;
+    
+    bool isContracting;
+    
     /**
      * QAT parameters
      */
@@ -188,6 +231,16 @@ namespace DGtal
      */
     ImagePointer myImage;
     
+    std::vector<Paving> pavings;
+    std::vector<Paving> pavingsRemainder;
+    
+    Value a0, b0, c0, d0, e0, f0;
+    Value a1, b1, c1, d1;
+    Value b10, b11;
+    Matrix H, H0;
+    Value alpha0, alpha1, beta1;
+    Vector U0, U1;
+    
     // ------------------------- Private Datas --------------------------------
   private:
     
@@ -195,6 +248,57 @@ namespace DGtal
     // ------------------------- Hidden services ------------------------------
   protected:
     FastQAT();
+    
+    /**
+      * Computes the domain of the final image
+      *
+      * @param domain the initial image's domain
+      *
+      * @return the final image's domain
+      */
+    Domain getImageBound ( const Domain domain ) const;
+    
+    /**
+      * Computes the image of a point
+      *
+      * @param p the initial point
+      *
+      * @return the image of the point
+      */
+    const Point calculate ( const Point & p ) const;
+    
+    /**
+      * Computes the antecedent of a point
+      *
+      * @param p the initial point
+      *
+      * @return the image of the point
+      */
+    const Point calculateInv ( const Point & p ) const;
+    
+    /**
+      * computes the remainder of a point
+      *
+      * @param p the initial point
+      *
+      * @return the image of the point
+      */
+    const Point calculateRemainderInv ( const Point p ) const;
+
+    void setPavingRemainder ( const Point I, const Point Rem, const Point P );
+    
+    void determinePavingsWithRemainders();
+    
+    Value pavingValue( const Paving & P, const Point & v ) const;
+    
+    /**
+     * Computes the inverse of the QAT
+     */
+    void inverse();
+    
+    void compute();
+    
+    
 
 
   private:

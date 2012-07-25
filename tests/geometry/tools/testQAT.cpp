@@ -15,20 +15,19 @@
  **/
 
 /**
- * @file testPreimage.cpp
+ * @file testQAT.cpp
  * @ingroup Tests
- * @author Tristan Roussillon (\c tristan.roussillon@liris.cnrs.fr )
- * Laboratoire d'InfoRmatique en Image et Systèmes d'information - LIRIS (CNRS, UMR 5205), CNRS, France
+ * @author Jérémy Gaillard (\c jeremy.gaillard@insa-lyon.fr )
+ * Institut National des Sciences Appliquées - INSA, France
  *
  *
- * @date 2010/07/02
+ * @date 2012/07/10
  *
  * This file is part of the DGtal library
  */
 
 /**
- * @brief Aim: simple test of Preimage2D
- * @see testGeometricalDSS.cpp
+ * @brief Aim: simple test of NaiveQAT, NearestNeighborQAT and FastQAT
  */
 
 #include <fstream>
@@ -46,6 +45,7 @@
 #include "DGtal/images/ImageContainerBySTLVector.h"
 #include "DGtal/geometry/tools/NaiveQAT.h"
 #include "DGtal/geometry/tools/NearestNeighborQAT.h"
+#include "DGtal/geometry/tools/FastQAT.h"
 
 #include "DGtal/images/CConstImage.h"
 
@@ -61,6 +61,81 @@ using namespace Z2i;
 
 typedef ImageContainerBySTLVector<Z2i::Domain, int> Image;
 
+
+void testFastQAT(const Image & image, const SimpleMatrix<int, 2, 2> & Mat, const int & omega, const Point & vect)
+{
+  //BOOST_CONCEPT_ASSERT(( CConstImage<NearestNeighborQAT<Image> > ));
+  
+  FastQAT<Image> QAT( Mat, omega, vect, 0 );
+  QAT.setImage(image);
+  Domain newDomain = QAT.domain();
+  
+  Board2D board;
+  board << SetMode( newDomain.className(), "Paving" )
+    << newDomain
+    << SetMode( newDomain.lowerBound().className(), "Paving" );
+  string specificStyle = newDomain.lowerBound().className() + "/Paving";
+  
+  GradientColorMap<int> cmap_grad( 1, 20 );
+  cmap_grad.addColor( Color( 50, 50, 255 ) );
+  cmap_grad.addColor( Color( 255, 0, 0 ) );
+  cmap_grad.addColor( Color( 255, 255, 10 ) );
+  
+  /*typename FastQAT<Image>::ConstRange::ConstIterator ite = QAT.constRange().end();
+  for ( typename FastQAT<Image>::ConstRange::ConstIterator it = QAT.constRange().begin();
+       it != ite; it++ )
+  {
+    cout << *it << " ";
+  }
+  cout << endl;*/
+  
+  for ( typename Domain::Iterator it = newDomain.begin(); it != newDomain.end(); it++ )	
+  {
+    int value = QAT(*it);
+    cout << value << endl;
+    if( value == 0)
+      board << CustomStyle( specificStyle,
+	new CustomColors( Color::Black,
+	Color::Black ) )
+	<< *it;
+    else
+      board << CustomStyle( specificStyle,
+	  new CustomColors( Color::Black,
+	  cmap_grad( value ) ) )
+	  << *it;
+  }
+  
+  board.saveEPS("testFastQAT.eps");
+  
+  int OmegaInv = Mat.determinant();
+  SimpleMatrix<int, 2, 2> MInv = ((Mat.cofactor()).transpose() * omega);
+  Point VInv = (Mat.cofactor()).transpose() * vect * -1;
+  FastQAT< FastQAT<Image> > QATInv( MInv, OmegaInv, VInv, 0 );
+  QATInv.setImage( QAT );
+  
+  Domain newDomain2 = QATInv.domain();
+  Board2D board2;
+  board2 << SetMode( newDomain2.className(), "Paving" )
+    << newDomain2
+    << SetMode( newDomain2.lowerBound().className(), "Paving" );
+  //string specificStyle = newDomain2.lowerBound().className() + "/Paving";
+  for ( typename Domain::Iterator it = newDomain2.begin(); it != newDomain2.end(); it++ )	
+  {
+    int value = QATInv(*it);
+    if( value == 0)
+      board2 << CustomStyle( specificStyle,
+	new CustomColors( Color::Black,
+	Color::Black ) )
+	<< *it;
+    else
+      board2 << CustomStyle( specificStyle,
+	  new CustomColors( Color::Black,
+	  cmap_grad( value ) ) )
+	  << *it;
+  }
+  
+  board2.saveEPS("testFastQATInv.eps");
+}
 
 void testNearestNeighborQAT(const Image & image, const SimpleMatrix<int, 2, 2> & Mat, const int & omega, const Point & vect)
 {
@@ -105,6 +180,35 @@ void testNearestNeighborQAT(const Image & image, const SimpleMatrix<int, 2, 2> &
   }
   
   board.saveEPS("testNNQAT.eps");
+  
+  int OmegaInv = Mat.determinant();
+  SimpleMatrix<int, 2, 2> MInv = ((Mat.cofactor()).transpose() * omega);
+  Point VInv = (Mat.cofactor()).transpose() * vect * -1;
+  FastQAT< NearestNeighborQAT<Image> > QATInv( MInv, OmegaInv, VInv, 0 );
+  QATInv.setImage( QAT );
+  
+  Domain newDomain2 = QATInv.domain();
+  Board2D board2;
+  board2 << SetMode( newDomain2.className(), "Paving" )
+    << newDomain2
+    << SetMode( newDomain2.lowerBound().className(), "Paving" );
+  //string specificStyle = newDomain2.lowerBound().className() + "/Paving";
+  for ( typename Domain::Iterator it = newDomain2.begin(); it != newDomain2.end(); it++ )	
+  {
+    int value = QATInv(*it);
+    if( value == 0)
+      board2 << CustomStyle( specificStyle,
+	new CustomColors( Color::Black,
+	Color::Black ) )
+	<< *it;
+    else
+      board2 << CustomStyle( specificStyle,
+	  new CustomColors( Color::Black,
+	  cmap_grad( value ) ) )
+	  << *it;
+  }
+  
+  board2.saveEPS("testNNQATInv.eps");
 }
 
 void testNaiveQAT(const Image & image, const SimpleMatrix<int, 2, 2> & Mat, const int & omega, const Point & vect)
@@ -173,19 +277,26 @@ int main()
   
 
   SimpleMatrix<int, 2, 2> Mat;
-  Mat.setComponent(0, 0, 5);
-  Mat.setComponent(0, 1, -2);
-  Mat.setComponent(1, 0, 1);
-  Mat.setComponent(1, 1, 4);
-//   Mat.setComponent(0, 0, 4);
-//   Mat.setComponent(0, 1, 1);
+//   Mat.setComponent(0, 0, 5);
+//   Mat.setComponent(0, 1, -2);
 //   Mat.setComponent(1, 0, 1);
-//   Mat.setComponent(1, 1, 1);
-  int omega = 2;
+//   Mat.setComponent(1, 1, 4);
+   Mat.setComponent(0, 0, 4);
+   Mat.setComponent(0, 1, 0);
+   Mat.setComponent(1, 0, 2);
+   Mat.setComponent(1, 1, 4);
+  
+//   Mat.setComponent(0, 0, 12);
+//   Mat.setComponent(0, 1, -11);
+//   Mat.setComponent(1, 0, 18);
+//   Mat.setComponent(1, 1, 36);
+  int omega = 1;
   Point vect(0, 0);
   
   testNaiveQAT(image, Mat, omega, vect);
   
   testNearestNeighborQAT(image, Mat, omega, vect);
+  
+  testFastQAT(image, Mat, omega, vect);
   
 }
