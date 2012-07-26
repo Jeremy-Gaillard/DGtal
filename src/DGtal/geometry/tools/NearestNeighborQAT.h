@@ -46,7 +46,7 @@
 #include "DGtal/kernel/SimpleMatrix.h"
 #include "DGtal/base/CowPtr.h"
 #include "DGtal/images/CConstImage.h"
-#include "DGtal/base/ConstRangeAdapter.h"
+#include "DGtal/images/DefaultConstImageRange.h"
 #include <vector>
 //////////////////////////////////////////////////////////////////////////////
 
@@ -67,7 +67,7 @@ namespace DGtal
   template <typename TImageContainer>
   class NearestNeighborQAT
   {
-    //BOOST_CONCEPT_ASSERT(( CConstImage<TImageContainer> ));
+    BOOST_CONCEPT_ASSERT(( CConstImage<TImageContainer> ));
 
 
     // ----------------------- Types ------------------------------
@@ -79,24 +79,7 @@ namespace DGtal
     typedef typename TImageContainer::Value Value;
     typedef CowPtr<const TImageContainer> ImagePointer;
     
-    class valueFunctor
-    {
-    public:
-      valueFunctor(const Self & aImage) : image(aImage)
-      { }
-      valueFunctor operator=(valueFunctor & other) 
-      { 
-	image(other.image);
-      }
-      Value operator()(Point p) const
-      {
-	return image(p);
-      }
-    private:
-      const Self & image;
-    };
-    
-    typedef ConstRangeAdapter< typename Domain::ConstIterator, valueFunctor, Value > ConstRange;
+    typedef DefaultConstImageRange< Self > ConstRange;
     
     typedef typename DigitalSetSelector
 	< Domain, SMALL_DS+HIGH_ITER_DS >
@@ -131,7 +114,7 @@ namespace DGtal
      * @param defaultValue the value affected to the points outside the 
      * transformed image
      */
-    NearestNeighborQAT( const Matrix & M, const Value & omega, const Vector & V, const Value & defaultValue );
+    NearestNeighborQAT( const Matrix & M, const Value & omega, const Vector & V, const Value & defaultValue, const ImageContainer & image );
 
     /**
      * Destructor. Does nothing.
@@ -176,7 +159,7 @@ namespace DGtal
      */
     ConstRange constRange() const
     {
-      return ConstRange( myDomain.begin(), myDomain.end(), valueFunctor(*this) );
+      return ConstRange( *this );
     }
     
     /**
@@ -195,7 +178,7 @@ namespace DGtal
      * 
      * @param image the image to be transformed
      */
-    void setImage( const ImageContainer & image );
+    //void setImage( const ImageContainer & image );
 
     
 

@@ -45,7 +45,7 @@
 #include "DGtal/kernel/SimpleMatrix.h"
 #include "DGtal/base/CountedPtr.h"
 #include "DGtal/images/CConstImage.h"
-#include "DGtal/base/ConstRangeAdapter.h"
+#include "DGtal/images/DefaultConstImageRange.h"
 #include <vector>
 //////////////////////////////////////////////////////////////////////////////
 
@@ -85,24 +85,7 @@ namespace DGtal
     typedef SimpleMatrix<Value, dimension, dimension> Matrix;
     typedef typename Matrix::ColumnVector Vector;	// Same as point
     
-    class valueFunctor
-    {
-    public:
-      valueFunctor(const Self & aImage) : image(aImage)
-      { }
-      valueFunctor operator=(valueFunctor & other) 
-      { 
-	image(other.image);
-      }
-      Value operator()(Point p) const
-      {
-	return image(p);
-      }
-    private:
-      const Self & image;
-    };
-    
-    typedef ConstRangeAdapter< typename Domain::ConstIterator, valueFunctor, Value > ConstRange;
+    typedef DefaultConstImageRange< Self > ConstRange;
     
 
   private:
@@ -126,7 +109,7 @@ namespace DGtal
      * @param defaultValue the value affected to the points outside the 
      * transformed image
      */
-    NaiveQAT( const Matrix & M, const Value & omega, const Vector & V, const Value & defaultValue );
+    NaiveQAT( const Matrix & M, const Value & omega, const Vector & V, const Value & defaultValue, const ImageContainer & image );
     
     /**
      * Destructor. Does nothing.
@@ -137,7 +120,20 @@ namespace DGtal
      * Copy constructor.
      * @param other the object to clone.
      */
-    NaiveQAT( const NaiveQAT & other );
+    NaiveQAT( const NaiveQAT & other )
+    {
+      myM = other.myM;
+      myV = other.myV;
+      myDefaultValue = other.myDefaultValue;
+      myImage = other.myImage;
+      myOmega = other.myOmega;
+      myDomain = other.myDomain;
+      myMInv = other.myMInv;
+      myVInv = other.myVInv;
+      myOmegaInv = other.myOmegaInv;
+      FirstPp = other.FirstPp;
+      incr = other.incr;
+    }
     
     
     /**
@@ -158,7 +154,7 @@ namespace DGtal
      */
     ConstRange constRange() const
     {
-      return ConstRange( myDomain.begin(), myDomain.end(), valueFunctor(*this) );
+      return ConstRange( *this );
     }
     
     /**
@@ -178,7 +174,7 @@ namespace DGtal
      * 
      * @param image the image to be transformed
      */
-    void setImage( const ImageContainer & image );
+    //void setImage( const ImageContainer & image );
     
 
     

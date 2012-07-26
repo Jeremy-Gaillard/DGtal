@@ -100,7 +100,7 @@ int mod( int a, int b )
 
 template <typename TImageContainer>
 DGtal::FastQAT<TImageContainer, 2>::
-FastQAT( const Matrix & M, const Value & omega, const Vector & V, const Value & defaultValue )
+FastQAT( const Matrix & M, const Value & omega, const Vector & V, const Value & defaultValue, const ImageContainer & image )
 : myM(M), myOmega(omega), myV(V), myDefaultValue(defaultValue)
 {
   assert( TImageContainer::Domain::dimension == 2 );
@@ -120,9 +120,16 @@ FastQAT( const Matrix & M, const Value & omega, const Vector & V, const Value & 
     //inverse();
   }
   compute();
+  myImage = ImagePointer(new ImageContainer(image));
+  myDomain = getImageBound( image.domain() );
+  
+  pavings = std::vector<Paving> ( alpha1 * alpha0, Paving(image.domain()) );
+  pavingsRemainder = std::vector<Paving> ( alpha1 * alpha0, Paving(image.domain()) );
+  
+  determinePavingsWithRemainders();
 }
 
-template <typename TImageContainer>
+/*template <typename TImageContainer>
 void
 DGtal::FastQAT<TImageContainer, 2>::
 setImage( const ImageContainer & image )
@@ -134,7 +141,7 @@ setImage( const ImageContainer & image )
   pavingsRemainder = std::vector<Paving> ( alpha1 * alpha0, Paving(image.domain()) );
   
   determinePavingsWithRemainders();
-}
+}*/
 
 template <typename TImageContainer>
 typename DGtal::FastQAT<TImageContainer, 2>::Value 

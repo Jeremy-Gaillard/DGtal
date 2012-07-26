@@ -39,10 +39,23 @@
 // ----------------------- Standard services ------------------------------
 
 template<typename TImageContainer>
-DGtal::NaiveQAT<TImageContainer>::NaiveQAT( const Matrix & M, const Value & omega, const Vector & V, const Value & defaultValue )
+DGtal::NaiveQAT<TImageContainer>::NaiveQAT( const Matrix & M, const Value & omega, const Vector & V, const Value & defaultValue, const ImageContainer & image )
 : myM(M), myOmega(omega), myV(V), myDefaultValue(defaultValue)
 {
   inverse();
+  myImage = ImagePointer(new ImageContainer(image));
+  myDomain = getImageBound( image.domain() );
+  
+  Point lowerBound = myDomain.lowerBound();
+  // Antecedent point, initialized as the antecedent point of the lower bound
+  FirstPp = myMInv * lowerBound + myVInv;
+  // Incrementation in each dimension for each step performed
+  for( Dimension d = 0; d != dimension; d++ )
+  {
+    Point vect = Point::zero;
+    vect[d] = 1;
+    incr.push_back(myMInv * vect);
+  }
 }
 
 template<typename TImageContainer>
@@ -50,7 +63,7 @@ DGtal::NaiveQAT<TImageContainer>::~NaiveQAT()
 {
 }
 
-template<typename TImageContainer>
+/*template<typename TImageContainer>
 void
 DGtal::NaiveQAT<TImageContainer>::setImage( const ImageContainer & image )
 {
@@ -68,7 +81,7 @@ DGtal::NaiveQAT<TImageContainer>::setImage( const ImageContainer & image )
     vect[d] = 1;
     incr.push_back(myMInv * vect);
   }
-}
+}*/
 
 template<typename TImageContainer>
 typename DGtal::NaiveQAT<TImageContainer>::Value

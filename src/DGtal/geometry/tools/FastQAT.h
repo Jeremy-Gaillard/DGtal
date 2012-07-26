@@ -45,6 +45,7 @@
 #include "DGtal/kernel/sets/DigitalSetSelector.h"
 #include "DGtal/kernel/SimpleMatrix.h"
 #include "DGtal/base/CowPtr.h"
+#include "DGtal/images/DefaultConstImageRange.h"
 #include "DGtal/images/CConstImage.h"
 //////////////////////////////////////////////////////////////////////////////
 
@@ -75,17 +76,19 @@ namespace DGtal
   template <typename TImageContainer>
   class FastQAT<TImageContainer, 2>
   {
-    //BOOST_CONCEPT_ASSERT(( CConstImage<TImageContainer> ));
+    BOOST_CONCEPT_ASSERT(( CConstImage<TImageContainer> ));
 
 
     // ----------------------- Types ------------------------------
   public:
+    typedef FastQAT< TImageContainer > Self;
     typedef TImageContainer ImageContainer;
     typedef typename TImageContainer::Domain Domain;
     typedef typename TImageContainer::Point Point;
     typedef typename TImageContainer::Value Value;
-    typedef typename TImageContainer::ConstRange ConstRange;
-    typedef CowPtr<TImageContainer> ImagePointer;
+    typedef CowPtr<const TImageContainer> ImagePointer;
+    
+    typedef DefaultConstImageRange< Self > ConstRange;
     
     typedef typename DigitalSetSelector
 	< Domain, SMALL_DS+HIGH_ITER_DS >
@@ -120,12 +123,12 @@ namespace DGtal
      * @param defaultValue the value affected to the points outside the 
      * transformed image
      */
-    FastQAT( const Matrix & M, const Value & omega, const Vector & V, const Value & defaultValue );
+    FastQAT( const Matrix & M, const Value & omega, const Vector & V, const Value & defaultValue, const ImageContainer & image );
 
     /**
      * Destructor. Does nothing.
      */
-    ~FastQAT() { };
+    ~FastQAT() { }
 
     /**
      * Copy constructor.
@@ -153,7 +156,7 @@ namespace DGtal
      * 
      * @param image the image to be transformed
      */
-    void setImage( const ImageContainer & image );
+    //void setImage( const ImageContainer & image );
     
     /**
      * Returns a reference to the transformed image domain.
@@ -173,7 +176,7 @@ namespace DGtal
      */
     ConstRange constRange() const
     {
-      return myImage->constRange();
+      return ConstRange( *this );
     }
     
     /**

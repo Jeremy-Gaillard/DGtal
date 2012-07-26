@@ -64,10 +64,10 @@ typedef ImageContainerBySTLVector<Z2i::Domain, int> Image;
 
 void testFastQAT(const Image & image, const SimpleMatrix<int, 2, 2> & Mat, const int & omega, const Point & vect)
 {
-  //BOOST_CONCEPT_ASSERT(( CConstImage<NearestNeighborQAT<Image> > ));
+  //BOOST_CONCEPT_ASSERT(( CConstImage<FastQAT<Image> > ));
   
-  FastQAT<Image> QAT( Mat, omega, vect, 0 );
-  QAT.setImage(image);
+  FastQAT<Image> QAT( Mat, omega, vect, 0, image );
+  //QAT.setImage(image);
   Domain newDomain = QAT.domain();
   
   Board2D board;
@@ -110,8 +110,8 @@ void testFastQAT(const Image & image, const SimpleMatrix<int, 2, 2> & Mat, const
   int OmegaInv = Mat.determinant();
   SimpleMatrix<int, 2, 2> MInv = ((Mat.cofactor()).transpose() * omega);
   Point VInv = (Mat.cofactor()).transpose() * vect * -1;
-  FastQAT< FastQAT<Image> > QATInv( MInv, OmegaInv, VInv, 0 );
-  QATInv.setImage( QAT );
+  FastQAT< FastQAT<Image> > QATInv( MInv, OmegaInv, VInv, 0, QAT );
+  //QATInv.setImage( QAT );
   
   Domain newDomain2 = QATInv.domain();
   Board2D board2;
@@ -139,10 +139,10 @@ void testFastQAT(const Image & image, const SimpleMatrix<int, 2, 2> & Mat, const
 
 void testNearestNeighborQAT(const Image & image, const SimpleMatrix<int, 2, 2> & Mat, const int & omega, const Point & vect)
 {
-  //BOOST_CONCEPT_ASSERT(( CConstImage<NearestNeighborQAT<Image> > ));
+  BOOST_CONCEPT_ASSERT(( CConstImage<NearestNeighborQAT<Image> > ));
   
-  NearestNeighborQAT<Image> QAT( Mat, omega, vect, 0 );
-  QAT.setImage(image);
+  NearestNeighborQAT<Image> QAT( Mat, omega, vect, 0, image );
+  //QAT.setImage(image);
   Domain newDomain = QAT.domain();
   
   Board2D board;
@@ -184,8 +184,8 @@ void testNearestNeighborQAT(const Image & image, const SimpleMatrix<int, 2, 2> &
   int OmegaInv = Mat.determinant();
   SimpleMatrix<int, 2, 2> MInv = ((Mat.cofactor()).transpose() * omega);
   Point VInv = (Mat.cofactor()).transpose() * vect * -1;
-  FastQAT< NearestNeighborQAT<Image> > QATInv( MInv, OmegaInv, VInv, 0 );
-  QATInv.setImage( QAT );
+  FastQAT< NearestNeighborQAT<Image> > QATInv( MInv, OmegaInv, VInv, 0, QAT );
+  //QATInv.setImage( QAT );
   
   Domain newDomain2 = QATInv.domain();
   Board2D board2;
@@ -213,10 +213,10 @@ void testNearestNeighborQAT(const Image & image, const SimpleMatrix<int, 2, 2> &
 
 void testNaiveQAT(const Image & image, const SimpleMatrix<int, 2, 2> & Mat, const int & omega, const Point & vect)
 {
-  //BOOST_CONCEPT_ASSERT(( CConstImage<NaiveQAT<Image> > ));
+  BOOST_CONCEPT_ASSERT(( CConstImage<NaiveQAT<Image> > ));
   
-  NaiveQAT<Image> QAT( Mat, omega, vect, 0 );
-  QAT.setImage(image);
+  NaiveQAT<Image> QAT( Mat, omega, vect, 0, image );
+  //QAT.setImage(image);
   Domain newDomain = QAT.domain();
   
   Board2D board;
@@ -254,6 +254,7 @@ void testNaiveQAT(const Image & image, const SimpleMatrix<int, 2, 2> & Mat, cons
   }
   
   board.saveEPS("testNaiveQAT.eps");
+  cout << "Bye dudes :(" << endl;
 }
 
 
@@ -292,11 +293,16 @@ int main()
 //   Mat.setComponent(1, 1, 36);
   int omega = 1;
   Point vect(0, 0);
-  
+  trace.beginBlock("Testing naive QAT");
   testNaiveQAT(image, Mat, omega, vect);
+  trace.endBlock();
   
+  trace.beginBlock("Testing nearest neighbour QAT");
   testNearestNeighborQAT(image, Mat, omega, vect);
+  trace.endBlock();
   
+  trace.beginBlock("Testing fast QAT");
   testFastQAT(image, Mat, omega, vect);
+  trace.endBlock();
   
 }
