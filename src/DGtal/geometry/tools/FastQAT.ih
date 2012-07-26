@@ -105,7 +105,6 @@ FastQAT( const Matrix & M, const Value & omega, const Vector & V, const Value & 
 {
   assert( TImageContainer::Domain::dimension == 2 );
   isContracting = myOmega * myOmega > myM.determinant();
-  cout << "Contracting ? " << isContracting << endl;
   if( isContracting )
   {
     myMInv = myM;
@@ -124,24 +123,9 @@ FastQAT( const Matrix & M, const Value & omega, const Vector & V, const Value & 
   myDomain = getImageBound( image.domain() );
   
   pavings = std::vector<Paving> ( alpha1 * alpha0, Paving(image.domain()) );
-  pavingsRemainder = std::vector<Paving> ( alpha1 * alpha0, Paving(image.domain()) );
   
-  determinePavingsWithRemainders();
+  determinePavings();
 }
-
-/*template <typename TImageContainer>
-void
-DGtal::FastQAT<TImageContainer, 2>::
-setImage( const ImageContainer & image )
-{
-  myImage = ImagePointer(new ImageContainer(image));
-  myDomain = getImageBound( image.domain() );
-  
-  pavings = std::vector<Paving> ( alpha1 * alpha0, Paving(image.domain()) );
-  pavingsRemainder = std::vector<Paving> ( alpha1 * alpha0, Paving(image.domain()) );
-  
-  determinePavingsWithRemainders();
-}*/
 
 template <typename TImageContainer>
 typename DGtal::FastQAT<TImageContainer, 2>::Value 
@@ -150,11 +134,9 @@ DGtal::FastQAT<TImageContainer, 2>::operator()( const Point & aPoint ) const
   typedef typename Point::Coordinate Coordinate;
   
   Paving P = Paving(myImage->domain());
-  Paving rP = Paving(myImage->domain());
   Value i0, v0, j0, v1;
   Point v;
   
-  Point lowerBound = myDomain.lowerBound();
   
   j0 = mod ( aPoint[1], alpha1 );
   v1 = intDiv ( aPoint[1], alpha1 );
@@ -162,42 +144,23 @@ DGtal::FastQAT<TImageContainer, 2>::operator()( const Point & aPoint ) const
   v0 = intDiv ( aPoint[0] + v1 * beta1, alpha0 );
     
   v = U0 * v0 + U1 * v1;
-  // v is the image of aPoint by the QAT
   
   
-  if ( 0 <= i0 && i0 < alpha0 && 0 <= j0 && j0 < alpha1 )
-    P = pavings[j0 * alpha0 + i0];
-  if ( 0 <= i0 && i0 < alpha0 && 0 <= j0 && j0 < alpha1 )
-    rP = pavingsRemainder[j0 * alpha0 + i0];
+  
   if( isContracting )
   {
+    if ( 0 <= i0 && i0 < alpha0 && 0 <= j0 && j0 < alpha1 )
+    {
+      P = pavings[j0 * alpha0 + i0];
+    }
     return pavingValue( P, v );
   }
   else
   {
-    typename Paving::ConstIterator ite = rP.end();
-    cout << "start ";
-    for ( typename Paving::ConstIterator it = rP.begin(); it != ite; it++ )
-    {
-      Point P2 = v + *it;
-      cout << *it << " ; ";
-      if ( myImage->domain().isInside( P2 ) && (*myImage)( P2 ) != 0 )
-        return (*myImage)( P2 );
-    }
-    cout << endl;
-    return 0;
-    /*
-    Point P2 = v - myDomain.lowerBound();
-    if ( myImage->domain().isInside( P2 ) )
-    {
-      cout << "SUP BRO" << endl;
-      return (*myImage)( P2 );
-    }
-    else
-    {
-      cout << "Fail :(" << endl;
-      return 0;
-    }*/
+    
+    if ( myImage->domain().isInside( v ) )
+      return (*myImage)( v );
+    return myDefaultValue;
   }
 }
 
@@ -220,7 +183,6 @@ DGtal::FastQAT<TImageContainer, 2>::getImageBound ( const Domain domain ) const
 		  std::min( p0[1], std::min( p1[1], std::min( p2[1], p3[1] ) ) ) );
   Point newUpper( std::max( p0[0], std::max( p1[0], std::max( p2[0], p3[0] ) ) ), 
 		  std::max( p0[1], std::max( p1[1], std::max( p2[1], p3[1] ) ) ) );
-  cout << "Bounds : " << newLower << " " << newUpper << endl;
   return Domain( newLower, newUpper );
 }
 
@@ -247,7 +209,7 @@ DGtal::FastQAT<TImageContainer, 2>::pavingValue( const Paving & P, const Point &
 
 template<typename TImageContainer>
 void 
-DGtal::FastQAT<TImageContainer, 2>::determinePavingsWithRemainders()
+DGtal::FastQAT<TImageContainer, 2>::determinePavings()
 {
   int A = -intDiv ( f0, d1 );
   for ( int y = A; y < A + myOmegaInv * alpha1 / d1; y++ )
@@ -257,22 +219,19 @@ DGtal::FastQAT<TImageContainer, 2>::determinePavingsWithRemainders()
         {
           Point X = H * Point ( x, y );
           Point I = calculateInv ( X );
-          Point rem = calculateRemainderInv ( X );
 
-          setPavingRemainder ( I, rem, X );
+          setPaving ( I, X );
         }
     }
 }
 
 template<typename TImageContainer>
 void 
-DGtal::FastQAT<TImageContainer, 2>::setPavingRemainder ( const Point I, const Point Rem, const Point P )
+DGtal::FastQAT<TImageContainer, 2>::setPaving ( const Point I, const Point P )
 {
   if ( 0 <= I[0] && I[0] < alpha0 && 0 <= I[1] && I[1] < alpha1 )
   {
-    cout << "Paving n°" << I[1] * alpha0 + I[0] << " : " << P << endl;
     pavings[I[1] * alpha0 + I[0]].insertNew( P );
-    pavingsRemainder[I[1] * alpha0 + I[0]].insertNew( Rem );
   }
 }
 
@@ -298,19 +257,6 @@ DGtal::FastQAT<TImageContainer, 2>::calculateInv ( const Point & p ) const
   for( Dimension d = 0; d != dimension; d++ )
   {
     returnValue[d] /= myOmegaInv;
-  }
-  return returnValue;
-}
-
-template<typename TImageContainer>
-const 
-typename DGtal::FastQAT<TImageContainer, 2>::Point 
-DGtal::FastQAT<TImageContainer, 2>::calculateRemainderInv ( const Point p ) const
-{
-  Point returnValue = myMInv * p + myVInv;
-  for( Dimension d = 0; d != dimension; d++ )
-  {
-    returnValue[d] %= myOmegaInv;
   }
   return returnValue;
 }

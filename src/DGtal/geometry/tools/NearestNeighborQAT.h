@@ -113,6 +113,8 @@ namespace DGtal
      * 
      * @param defaultValue the value affected to the points outside the 
      * transformed image
+     * 
+     * @param image the image to be transformed
      */
     NearestNeighborQAT( const Matrix & M, const Value & omega, const Vector & V, const Value & defaultValue, const ImageContainer & image );
 
@@ -173,12 +175,6 @@ namespace DGtal
      */
     Value operator()( const Point & aPoint ) const;
     
-    /**
-     * Chooses the image that will be transformed by the QAT.
-     * 
-     * @param image the image to be transformed
-     */
-    //void setImage( const ImageContainer & image );
 
     
 

@@ -57,6 +57,7 @@ namespace DGtal
   /**
    * @brief Aim : computes a quasi-affine transformation (M+V)/omega 
    * of an image using a fast algorithm
+   * This class is most efficient for contracting QATs.
    *
    * \b Model of CConstImage
    *
@@ -122,6 +123,8 @@ namespace DGtal
      * 
      * @param defaultValue the value affected to the points outside the 
      * transformed image
+     * 
+     * @param image the image to be transformed
      */
     FastQAT( const Matrix & M, const Value & omega, const Vector & V, const Value & defaultValue, const ImageContainer & image );
 
@@ -144,19 +147,12 @@ namespace DGtal
       myDomain = other.myDomain;
       isContracting = other.isContracting;
       pavings = other.pavings;
-      pavingsRemainder = other.pavingsRemainder;
       myMInv = other.myMInv;
       myVInv = other.myVInv;
       myOmegaInv = other.myOmegaInv;
       compute();	// TODO : replace by a0=other.a0 ...
     }
     
-    /**
-     * Chooses the image that will be transformed by the QAT.
-     * 
-     * @param image the image to be transformed
-     */
-    //void setImage( const ImageContainer & image );
     
     /**
      * Returns a reference to the transformed image domain.
@@ -235,7 +231,6 @@ namespace DGtal
     ImagePointer myImage;
     
     std::vector<Paving> pavings;
-    std::vector<Paving> pavingsRemainder;
     
     Value a0, b0, c0, d0, e0, f0;
     Value a1, b1, c1, d1;
@@ -279,18 +274,9 @@ namespace DGtal
       */
     const Point calculateInv ( const Point & p ) const;
     
-    /**
-      * computes the remainder of a point
-      *
-      * @param p the initial point
-      *
-      * @return the image of the point
-      */
-    const Point calculateRemainderInv ( const Point p ) const;
-
-    void setPavingRemainder ( const Point I, const Point Rem, const Point P );
+    void setPaving ( const Point I, const Point P );
     
-    void determinePavingsWithRemainders();
+    void determinePavings();
     
     Value pavingValue( const Paving & P, const Point & v ) const;
     

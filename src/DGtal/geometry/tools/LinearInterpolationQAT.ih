@@ -15,13 +15,13 @@
  **/
 
 /**
- * @file NaiveQAT.ih
+ * @file LinearInterpolationQAT.ih
  * @author Jérémy Gaillard (\c jeremy.gaillard@insa-lyon.fr )
  * Institut National des Sciences Appliquées - INSA, France
  *
  * @date 2012/07/10
  *
- * @brief Implementation of inline methods defined in NaiveQAT.h
+ * @brief Implementation of inline methods defined in LinearInterpolationQAT.h
  *
  * This file is part of the DGtal library.
  */
@@ -30,7 +30,7 @@
 //////////////////////////////////////////////////////////////////////////////
 #include <cstdlib>
 //////////////////////////////////////////////////////////////////////////////
-#include "DGtal/geometry/tools/NaiveQAT.h"
+#include "DGtal/geometry/tools/LinearInterpolationQAT.h"
 ///////////////////////////////////////////////////////////////////////////////
 // IMPLEMENTATION of inline methods.
 ///////////////////////////////////////////////////////////////////////////////
@@ -39,7 +39,7 @@
 // ----------------------- Standard services ------------------------------
 
 template<typename TImageContainer>
-DGtal::NaiveQAT<TImageContainer>::NaiveQAT( const Matrix & M, const Value & omega, const Vector & V, const Value & defaultValue, const ImageContainer & image )
+DGtal::LinearInterpolationQAT<TImageContainer>::LinearInterpolationQAT( const Matrix & M, const Value & omega, const Vector & V, const Value & defaultValue, const ImageContainer & image )
 : myM(M), myOmega(omega), myV(V), myDefaultValue(defaultValue)
 {
   inverse();
@@ -59,33 +59,14 @@ DGtal::NaiveQAT<TImageContainer>::NaiveQAT( const Matrix & M, const Value & omeg
 }
 
 template<typename TImageContainer>
-DGtal::NaiveQAT<TImageContainer>::~NaiveQAT()
+DGtal::LinearInterpolationQAT<TImageContainer>::~LinearInterpolationQAT()
 {
 }
 
-/*template<typename TImageContainer>
-void
-DGtal::NaiveQAT<TImageContainer>::setImage( const ImageContainer & image )
-{
-  myDomain = getImageBound( image.domain() );
-  myImage = ImagePointer(new ImageContainer(image));
-  
-  Point lowerBound = myDomain.lowerBound();
-  // Antecedent point, initialized as the antecedent point of the lower bound
-  FirstPp = myMInv * lowerBound + myVInv;
-  // Incrementation in each dimension for each step performed
-  incr.clear();
-  for( Dimension d = 0; d != dimension; d++ )
-  {
-    Point vect = Point::zero;
-    vect[d] = 1;
-    incr.push_back(myMInv * vect);
-  }
-}*/
 
 template<typename TImageContainer>
-typename DGtal::NaiveQAT<TImageContainer>::Value
-DGtal::NaiveQAT<TImageContainer>::operator()( const Point & aPoint ) const
+typename DGtal::LinearInterpolationQAT<TImageContainer>::Value
+DGtal::LinearInterpolationQAT<TImageContainer>::operator()( const Point & aPoint ) const
 {
   Point Pp = FirstPp;
   // translates the preceding point to the correct position
@@ -102,8 +83,8 @@ DGtal::NaiveQAT<TImageContainer>::operator()( const Point & aPoint ) const
 
 
 template<typename TImageContainer>
-typename DGtal::NaiveQAT<TImageContainer>::Value
-DGtal::NaiveQAT<TImageContainer>::
+typename DGtal::LinearInterpolationQAT<TImageContainer>::Value
+DGtal::LinearInterpolationQAT<TImageContainer>::
 backwardColorLinear( const Point & Pp, const ImageContainer & image ) const
 {
   // the real coordinates of the point
@@ -136,7 +117,7 @@ backwardColorLinear( const Point & Pp, const ImageContainer & image ) const
 
 template<typename TImageContainer>
 void
-DGtal::NaiveQAT<TImageContainer>::recursiveColor( double & val, double & div, const std::vector<double> & x,
+DGtal::LinearInterpolationQAT<TImageContainer>::recursiveColor( double & val, double & div, const std::vector<double> & x,
 			 const std::vector<double> & r, const std::vector<double> & l,
 			 const ImageContainer & image, int dim, double localDiv, Point localPoint/*const std::vector<bool> & sequence*/) const
 {
@@ -173,8 +154,8 @@ DGtal::NaiveQAT<TImageContainer>::recursiveColor( double & val, double & div, co
 
 template<typename TImageContainer>
 const
-typename DGtal::NaiveQAT<TImageContainer>::Point
-DGtal::NaiveQAT<TImageContainer>::calculate ( const Point & p ) const
+typename DGtal::LinearInterpolationQAT<TImageContainer>::Point
+DGtal::LinearInterpolationQAT<TImageContainer>::calculate ( const Point & p ) const
 {
   Point returnValue = myM * p + myV;
   for( Dimension d = 0; d != dimension; d++ )
@@ -185,8 +166,8 @@ DGtal::NaiveQAT<TImageContainer>::calculate ( const Point & p ) const
 }
 
 template<typename TImageContainer>
-typename DGtal::NaiveQAT<TImageContainer>::Domain
-DGtal::NaiveQAT<TImageContainer>::getImageBound ( const Domain domain ) const
+typename DGtal::LinearInterpolationQAT<TImageContainer>::Domain
+DGtal::LinearInterpolationQAT<TImageContainer>::getImageBound ( const Domain domain ) const
 {
   Point newLower;
   Point newUpper;
@@ -213,7 +194,7 @@ DGtal::NaiveQAT<TImageContainer>::getImageBound ( const Domain domain ) const
 
 template<typename TImageContainer>
 void
-DGtal::NaiveQAT<TImageContainer>::
+DGtal::LinearInterpolationQAT<TImageContainer>::
 getAllVertices( std::vector<Point> & vertices, const Dimension & start, 
 		const Point & startPoint, const Point & endPoint ) const
 {
@@ -228,7 +209,7 @@ getAllVertices( std::vector<Point> & vertices, const Dimension & start,
 
 template<typename TImageContainer>
 void
-DGtal::NaiveQAT<TImageContainer>::inverse()
+DGtal::LinearInterpolationQAT<TImageContainer>::inverse()
 {
   myOmegaInv = myM.determinant();
   assert( myOmegaInv != 0 && "M must be inversible");

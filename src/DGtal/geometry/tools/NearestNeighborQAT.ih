@@ -73,26 +73,6 @@ DGtal::NearestNeighborQAT<TImageContainer>::operator()( const Point & aPoint ) c
   return backwardColorNN( Pp, *myImage );
 }
 
-/*template<typename TImageContainer>
-void
-DGtal::NearestNeighborQAT<TImageContainer>::setImage( const ImageContainer & image )
-{
-  myDomain = getImageBound( image.domain() );
-  myImage = ImagePointer(new ImageContainer(image));
-  
-  Point lowerBound = myDomain.lowerBound();
-  // Antecedent point, initialized as the antecedent point of the lower bound
-  FirstPp = myMInv * lowerBound + myVInv;
-  // Incrementation in each dimension for each step performed
-  incr.clear();
-  for( Dimension d = 0; d != dimension; d++ )
-  {
-    Point vect = Point::zero;
-    vect[d] = 1;
-    incr.push_back(myMInv * vect);
-  }
-}*/
-
 template<typename TImageContainer>
 typename DGtal::NearestNeighborQAT<TImageContainer>::Value
 DGtal::NearestNeighborQAT<TImageContainer>::
@@ -164,7 +144,6 @@ DGtal::NearestNeighborQAT<TImageContainer>::getImageBound ( const Domain domain 
       newUpper[d] = std::max( transformedPoint[d], newUpper[d] );
     }
   }
-  cout << newLower << " " << newUpper << endl;
   return Domain(newLower, newUpper);
 }
 

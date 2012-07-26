@@ -17,26 +17,26 @@
 #pragma once
 
 /**
- * @file NaiveQAT.h
+ * @file LinearInterpolationQAT.h
  * @author Jérémy Gaillard (\c jeremy.gaillard@insa-lyon.fr )
  * Institut National des Sciences Appliquées - INSA, France
  *
  * @date 2012/07/10
  *
- * @brief Header file for module NaiveQAT.h
+ * @brief Header file for module LinearInterpolationQAT.h
  *
  * This file is part of the DGtal library.
  */
 
-#if defined(NaiveQAT_RECURSES)
+#if defined(LinearInterpolationQAT_RECURSES)
 #error Recursive header files inclusion detected in Preimage2D.h
-#else // defined(NaiveQAT_RECURSES)
+#else // defined(LinearInterpolationQAT_RECURSES)
 /** Prevents recursive inclusion of headers. */
-#define NaiveQAT_RECURSES
+#define LinearInterpolationQAT_RECURSES
 
-#if !defined NaiveQAT_h
+#if !defined LinearInterpolationQAT_h
 /** Prevents repeated inclusion of headers. */
-#define NaiveQAT_h
+#define LinearInterpolationQAT_h
 
 //////////////////////////////////////////////////////////////////////////////
 // Inclusions
@@ -53,10 +53,10 @@ namespace DGtal
 {
 
   /////////////////////////////////////////////////////////////////////////////
-  // template class NaiveQAT
+  // template class LinearInterpolationQAT
   /**
    * @brief Aim : computes a quasi-affine transformation (M+V)/omega 
-   * of an image using a naive algorithm
+   * of an image using the linear interpolation technic
    *
    * \b Model of CConstImage
    *
@@ -64,14 +64,14 @@ namespace DGtal
    * @tparam TImageContainer any model of CConstImage
    */
   template <typename TImageContainer>
-  class NaiveQAT
+  class LinearInterpolationQAT
   {
     BOOST_CONCEPT_ASSERT(( CConstImage<TImageContainer> ));
 
 
     // ----------------------- Types ------------------------------
   public:
-    typedef NaiveQAT<TImageContainer> Self;
+    typedef LinearInterpolationQAT<TImageContainer> Self;
     typedef TImageContainer ImageContainer;
     typedef typename TImageContainer::Domain Domain;
     typedef typename TImageContainer::Point Point;
@@ -108,19 +108,21 @@ namespace DGtal
      * 
      * @param defaultValue the value affected to the points outside the 
      * transformed image
+     * 
+     * @param image the image to be transformed
      */
-    NaiveQAT( const Matrix & M, const Value & omega, const Vector & V, const Value & defaultValue, const ImageContainer & image );
+    LinearInterpolationQAT( const Matrix & M, const Value & omega, const Vector & V, const Value & defaultValue, const ImageContainer & image );
     
     /**
      * Destructor. Does nothing.
      */
-    ~NaiveQAT();
+    ~LinearInterpolationQAT();
 
     /**
      * Copy constructor.
      * @param other the object to clone.
      */
-    NaiveQAT( const NaiveQAT & other )
+    LinearInterpolationQAT( const LinearInterpolationQAT & other )
     {
       myM = other.myM;
       myV = other.myV;
@@ -168,13 +170,6 @@ namespace DGtal
      */
     Value operator()( const Point & aPoint ) const;
     
-    
-    /**
-     * Chooses the image that will be transformed by the QAT.
-     * 
-     * @param image the image to be transformed
-     */
-    //void setImage( const ImageContainer & image );
     
 
     
@@ -236,7 +231,7 @@ namespace DGtal
 
     // ------------------------- Hidden services ------------------------------
   protected:
-    NaiveQAT();
+    LinearInterpolationQAT();
     
     /**
       * Computes the image of a point
@@ -281,7 +276,7 @@ namespace DGtal
     // ------------------------- Internals ------------------------------------
   private:
 
-  }; // end of class NaiveQAT
+  }; // end of class LinearInterpolationQAT
 
 
 } // namespace DGtal
@@ -289,12 +284,12 @@ namespace DGtal
 
 ///////////////////////////////////////////////////////////////////////////////
 // Includes inline functions.
-#include "DGtal/geometry/tools/NaiveQAT.ih"
+#include "DGtal/geometry/tools/LinearInterpolationQAT.ih"
 
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
-#endif // !defined NaiveQAT_h
+#endif // !defined LinearInterpolationQAT_h
 
-#undef NaiveQAT_RECURSES
-#endif // else defined(NaiveQAT_RECURSES)
+#undef LinearInterpolationQAT_RECURSES
+#endif // else defined(LinearInterpolationQAT_RECURSES)
