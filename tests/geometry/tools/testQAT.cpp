@@ -179,7 +179,7 @@ void testNearestNeighborQAT(const Image & image, const SimpleMatrix<int, 2, 2> &
   int OmegaInv = Mat.determinant();
   SimpleMatrix<int, 2, 2> MInv = ((Mat.cofactor()).transpose() * omega);
   Point VInv = (Mat.cofactor()).transpose() * vect * -1;
-  FastQAT< NearestNeighborQAT<Image> > QATInv( MInv, OmegaInv, VInv, 0, QAT );
+  NearestNeighborQAT< NearestNeighborQAT<Image> > QATInv( MInv, OmegaInv, VInv, 0, QAT );
   
   Domain newDomain2 = QATInv.domain();
   Board2D board2;
@@ -269,20 +269,20 @@ int main()
   
 
   SimpleMatrix<int, 2, 2> Mat;
-//   Mat.setComponent(0, 0, 5);
-//   Mat.setComponent(0, 1, -2);
-//   Mat.setComponent(1, 0, 1);
-//   Mat.setComponent(1, 1, 4);
-   Mat.setComponent(0, 0, 4);
-   Mat.setComponent(0, 1, 5);
-   Mat.setComponent(1, 0, 2);
-   Mat.setComponent(1, 1, 8);
+  Mat.setComponent(0, 0, 4);
+  Mat.setComponent(0, 1, 0);
+  Mat.setComponent(1, 0, 0);
+  Mat.setComponent(1, 1, 4);
+//    Mat.setComponent(0, 0, 12);
+//    Mat.setComponent(0, 1, 5);
+//    Mat.setComponent(1, 0, 6);
+//    Mat.setComponent(1, 1, 8);
   
 //   Mat.setComponent(0, 0, 12);
 //   Mat.setComponent(0, 1, -11);
 //   Mat.setComponent(1, 0, 18);
 //   Mat.setComponent(1, 1, 36);
-  int omega = 3;
+  int omega = 5;
   Point vect(0, 0);
   trace.beginBlock("Testing naive QAT");
   testLinearInterpolationQAT(image, Mat, omega, vect);

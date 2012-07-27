@@ -57,7 +57,8 @@ namespace DGtal
   /**
    * @brief Aim : computes a quasi-affine transformation (M+V)/omega 
    * of an image using a fast algorithm
-   * This class is most efficient for contracting QATs.
+   * This class is most efficient for contracting QATs. Non-contracting
+   * QATs are processed using the nearest neighbor (naive) technic.
    *
    * \b Model of CConstImage
    *
@@ -264,15 +265,6 @@ namespace DGtal
       * @return the image of the point
       */
     const Point calculate ( const Point & p ) const;
-    
-    /**
-      * Computes the antecedent of a point
-      *
-      * @param p the initial point
-      *
-      * @return the image of the point
-      */
-    const Point calculateInv ( const Point & p ) const;
     
     void setPaving ( const Point I, const Point P );
     
