@@ -279,6 +279,35 @@ namespace DGtal
     
     void compute();
     
+    /** 
+     * computes v0 and v1 such as v0 * a + v1 * b = gcd(a, b)
+     * 
+     * @param a the first integer
+     * @param b the second integer
+     * 
+     * @return the vector (v0, v1)
+     */
+    std::pair<Value, Value> extendedEuclidean( const Value & a, const Value & b ) const;
+    
+    /** 
+     * quotient of the Euclidean division of 2 integers with positive remain
+     * 
+     * @param a first integer
+     * @param b second integer
+     * 
+     * @return 
+     */
+    Value intDiv( const Value & a, const Value & b ) const;
+    
+    /** 
+     * remain of the Euclidean division of 2 integers with positive remain
+     * 
+     * @param a first integer
+     * @param b second integer
+     * 
+     * @return 
+     */
+    Value mod( const Value a, Value b ) const;
     
 
 

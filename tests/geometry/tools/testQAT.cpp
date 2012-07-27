@@ -49,7 +49,6 @@
 
 #include "DGtal/images/CConstImage.h"
 
-//#include "DGtal/io/readers/MagickReader.h"
 
 
 
@@ -104,33 +103,6 @@ void testFastQAT(const Image & image, const SimpleMatrix<int, 2, 2> & Mat, const
   }
   
   board.saveEPS("testFastQAT.eps");
-  
-  int OmegaInv = Mat.determinant();
-  SimpleMatrix<int, 2, 2> MInv = ((Mat.cofactor()).transpose() * omega);
-  Point VInv = (Mat.cofactor()).transpose() * vect * -1;
-  FastQAT< FastQAT<Image> > QATInv( MInv, OmegaInv, VInv, 0, QAT );
-  
-  Domain newDomain2 = QATInv.domain();
-  Board2D board2;
-  board2 << SetMode( newDomain2.className(), "Paving" )
-    << newDomain2
-    << SetMode( newDomain2.lowerBound().className(), "Paving" );
-  for ( typename Domain::Iterator it = newDomain2.begin(); it != newDomain2.end(); it++ )	
-  {
-    int value = QATInv(*it);
-    if( value == 0)
-      board2 << CustomStyle( specificStyle,
-	new CustomColors( Color::Black,
-	Color::Black ) )
-	<< *it;
-    else
-      board2 << CustomStyle( specificStyle,
-	  new CustomColors( Color::Black,
-	  cmap_grad( value ) ) )
-	  << *it;
-  }
-  
-  board2.saveEPS("testFastQATInv.eps");
 }
 
 void testNearestNeighborQAT(const Image & image, const SimpleMatrix<int, 2, 2> & Mat, const int & omega, const Point & vect)
@@ -175,33 +147,6 @@ void testNearestNeighborQAT(const Image & image, const SimpleMatrix<int, 2, 2> &
   }
   
   board.saveEPS("testNNQAT.eps");
-  
-  int OmegaInv = Mat.determinant();
-  SimpleMatrix<int, 2, 2> MInv = ((Mat.cofactor()).transpose() * omega);
-  Point VInv = (Mat.cofactor()).transpose() * vect * -1;
-  NearestNeighborQAT< NearestNeighborQAT<Image> > QATInv( MInv, OmegaInv, VInv, 0, QAT );
-  
-  Domain newDomain2 = QATInv.domain();
-  Board2D board2;
-  board2 << SetMode( newDomain2.className(), "Paving" )
-    << newDomain2
-    << SetMode( newDomain2.lowerBound().className(), "Paving" );
-  for ( typename Domain::Iterator it = newDomain2.begin(); it != newDomain2.end(); it++ )	
-  {
-    int value = QATInv(*it);
-    if( value == 0)
-      board2 << CustomStyle( specificStyle,
-	new CustomColors( Color::Black,
-	Color::Black ) )
-	<< *it;
-    else
-      board2 << CustomStyle( specificStyle,
-	  new CustomColors( Color::Black,
-	  cmap_grad( value ) ) )
-	  << *it;
-  }
-  
-  board2.saveEPS("testNNQATInv.eps");
 }
 
 void testLinearInterpolationQAT(const Image & image, const SimpleMatrix<int, 2, 2> & Mat, const int & omega, const Point & vect)
@@ -264,25 +209,15 @@ int main()
   image.setValue(Point(0,3), 11); image.setValue(Point(1,3), 1); image.setValue(Point(2,3), 3); image.setValue(Point(3,3), 2); image.setValue(Point(4,3), 13);
   image.setValue(Point(0,4), 1); image.setValue(Point(1,4), 9); image.setValue(Point(2,4), 8); image.setValue(Point(3,4), 7); image.setValue(Point(4,4), 1);
 
-  //Image image = MagickReader<Image>::importImage("inQAT.png");
-  //Domain domain = image.domain();
   
 
   SimpleMatrix<int, 2, 2> Mat;
-  Mat.setComponent(0, 0, 4);
-  Mat.setComponent(0, 1, 0);
-  Mat.setComponent(1, 0, 0);
-  Mat.setComponent(1, 1, 4);
-//    Mat.setComponent(0, 0, 12);
-//    Mat.setComponent(0, 1, 5);
-//    Mat.setComponent(1, 0, 6);
-//    Mat.setComponent(1, 1, 8);
   
-//   Mat.setComponent(0, 0, 12);
-//   Mat.setComponent(0, 1, -11);
-//   Mat.setComponent(1, 0, 18);
-//   Mat.setComponent(1, 1, 36);
-  int omega = 5;
+  Mat.setComponent(0, 0, 12);
+  Mat.setComponent(0, 1, -11);
+  Mat.setComponent(1, 0, 18);
+  Mat.setComponent(1, 1, 36);
+  int omega = 12;
   Point vect(0, 0);
   trace.beginBlock("Testing naive QAT");
   testLinearInterpolationQAT(image, Mat, omega, vect);
